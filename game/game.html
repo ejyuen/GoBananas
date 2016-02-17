@@ -17,19 +17,16 @@
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
 function preload() {
-    /*
-    game.load.image('sky', 'assets/sky.png');
+
+    game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', 80, 69);
+    //game.load.image("bed", "assets/img/bed.png");
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
-    // game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
-    game.load.spritesheet('dude', 'assets/img/monkey_sprites.png', 80, 69);
-    */
-    game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', 80, 69);
-    game.load.image("bed", "assets/img/bed.png");
     game.load.image('sky', 'assets/sky.png');
+
 }
 
-/*
+
 var player;
 var platforms;
 var cursors;
@@ -37,28 +34,26 @@ var cursors;
 var stars;
 var score = 0;
 var scoreText;
-*/
 
 var monkeyOne;
 var platforms;
 
 function create() {
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6aa9cdcbe98ef8690db061713056b16648f6137d
     //Creates background
     game.add.sprite(0, 0, "sky");
 
     //Creates the platforms group
     platforms = game.add.group();
-    //platforms.enableBody = true;
-
 
     var bed = platforms.create(0, game.world.height - 64, "bed");
     bed.scale.setTo(2, 2);
     bed.body.immovable = true;
 
-
-    /*
     //  A simple background for our game
     game.add.sprite(0, 0, 'sky');
 
@@ -82,7 +77,7 @@ function create() {
     ledge.body.immovable = true;
 
     // The player and its settings
-    player = game.add.sprite(32, game.world.height - 150, 'dude');
+    player = game.add.sprite(32, game.world.height - 150, 'monkey');
 
     //  Player physics properties. Give the little guy a slight bounce.
     player.body.bounce.y = 0.2;
@@ -114,11 +109,9 @@ function create() {
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
-    */
 }
 
 function update() {
-    /*
     //  Collide the player and the stars with the platforms
     game.physics.collide(player, platforms);
     game.physics.collide(stars, platforms);
@@ -156,7 +149,6 @@ function update() {
     {
         player.body.velocity.y = -350;
     }
-    */
 }
 
 function collectStar (player, star) {
