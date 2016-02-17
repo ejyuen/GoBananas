@@ -17,16 +17,17 @@
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
 function preload() {
-
+    /*
     game.load.image('sky', 'assets/sky.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
     // game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
     game.load.spritesheet('dude', 'assets/img/monkey_sprites.png', 80, 69);
-
+    */
 
 }
 
+/*
 var player;
 var platforms;
 var cursors;
@@ -34,9 +35,9 @@ var cursors;
 var stars;
 var score = 0;
 var scoreText;
-
+*/
 function create() {
-
+    /*
     // Un fondo simple para nuestro juego
     game.add.sprite(0, 0, 'sky');
 
@@ -92,11 +93,11 @@ function create() {
 
     //  Los controles del jugador con teclado
     cursors = game.input.keyboard.createCursorKeys();
-    
+    */
 }
 
 function update() {
-
+    /*
     //  Hacer que el jugador y las estrellas colisionen con las plataformas
     game.physics.collide(player, platforms);
     game.physics.collide(stars, platforms);
@@ -134,6 +135,7 @@ function update() {
     {
         player.body.velocity.y = -350;
     }
+    */
 }
 
 function collectStar (player, star) {
