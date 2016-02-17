@@ -45,14 +45,14 @@ var platforms;
 function create() {
 
     //Enable arcade physics
-    game.physics.startSystem(Phaser.Physics.ARCADE);
+    //game.physics.startSystem(Phaser.Physics.ARCADE);
 
     //Creates background
     game.add.sprite(0, 0, "sky");
 
     //Creates the platforms group
     platforms = game.add.group();
-    platforms.enableBody = true;
+    //platforms.enableBody = true;
 
 
     var bed = platforms.create(0, game.world.height - 64, "bed");
