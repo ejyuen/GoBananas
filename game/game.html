@@ -61,99 +61,99 @@ function create() {
 
 
     /*
-    // Un fondo simple para nuestro juego
+    //  A simple background for our game
     game.add.sprite(0, 0, 'sky');
 
-    //  El grupo 'platforms' contiene el suelo y las dos plataformas sobre las que podemos saltar
+    //  The platforms group contains the ground and the 2 ledges we can jump on
     platforms = game.add.group();
 
-    // Aquí creamos el suelo
+    // Here we create the ground.
     var ground = platforms.create(0, game.world.height - 64, 'ground');
 
-    // Lo escalamos para que se ajuste al ancho del juego (el sprite original es 400x32)
+    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
     ground.scale.setTo(2, 2);
 
-    //  Esto hace que el suelo no se caiga cuando saltas en él. Lo hace inmóvil
+    //  This stops it from falling away when you jump on it
     ground.body.immovable = true;
 
-    //  Creamos las dos plataformas
+    //  Now let's create two ledges
     var ledge = platforms.create(400, 400, 'ground');
     ledge.body.immovable = true;
 
     ledge = platforms.create(-150, 250, 'ground');
     ledge.body.immovable = true;
 
-    // El jugador y su configuración
+    // The player and its settings
     player = game.add.sprite(32, game.world.height - 150, 'dude');
 
-    //  Las propiedades físicas del jugador. Le damos al chaval un pequeño rebote al caer (bounce)
+    //  Player physics properties. Give the little guy a slight bounce.
     player.body.bounce.y = 0.2;
     player.body.gravity.y = 6; //gravedad
     player.body.collideWorldBounds = true; //choque con los bordes del juego
 
-    // Las dos animaciones del jugador, andar izquierda y derecha ('left' y 'right', resp.)
+    //  Our two animations, walking left and right.
     player.animations.add('left', [0, 1, 2, 3], 10, true);
     player.animations.add('right', [5, 6, 7, 8], 10, true);
     
-    // Añadimos un grupo para meter las estrellas
+    //  Finally some stars to collect
     stars = game.add.group();
 
-    //  Creamos 12 estrellas y las esparcimos por el escenario
+    //  Here we'll create 12 of them evenly spaced apart
     for (var i = 0; i < 12; i++)
     {
-        //  Creamos una estrella dentro del grupo 'stars'
+        //  Create a star inside of the 'stars' group
         var star = stars.create(i * 70, 0, 'star');
 
-        //  Le aplicamos gravedad
+        //  Let gravity do its thing
         star.body.gravity.y = 6;
 
-        //  ..y un cierto valor de rebote
+        //  This just gives each star a slightly random bounce value
         star.body.bounce.y = 0.7 + Math.random() * 0.2;
     }
 
-    //  Añadimos el marcador de la puntuación
+    //  The score
     scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
 
-    //  Los controles del jugador con teclado
+    //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
     */
 }
 
 function update() {
     /*
-    //  Hacer que el jugador y las estrellas colisionen con las plataformas
+    //  Collide the player and the stars with the platforms
     game.physics.collide(player, platforms);
     game.physics.collide(stars, platforms);
 
-    // Comprobar si el jugador se solapa con alguna estrella. Si es así, llamamos a la función 'collectStar'
+    // Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     game.physics.overlap(player, stars, collectStar, null, this);
 
-    //  Resetear la velocidad del jugador (movimiento)
+    //  Reset the players velocity (movement)
     player.body.velocity.x = 0;
 
-    if (cursors.left.isDown) //si se presiona la tecla izda..
+    if (cursors.left.isDown) //  Move to the left
     {
-        //  Mover a la izquierda
+        
         player.body.velocity.x = -150;
 
         player.animations.play('left');
     }
-    else if (cursors.right.isDown) //si se presiona derecha..
+    else if (cursors.right.isDown) 
     {
-        //  Mover a la derecha
+        //  Move to the right
         player.body.velocity.x = 150;
 
         player.animations.play('right');
     }
     else
     {
-        //  sino, quedarse quieto
+        //  //  Stand still
         player.animations.stop();
 
         player.frame = 4;
     }
     
-    //  Si se presiona la tecla arriba y el jugador está tocando el suelo, que salte
+    //  Allow the player to jump if they are touching the ground.
     if (cursors.up.isDown && player.body.touching.down)
     {
         player.body.velocity.y = -350;
@@ -163,10 +163,10 @@ function update() {
 
 function collectStar (player, star) {
     
-    // Elimina la estrella del juego
+    // Removes the star from the screen
     star.kill();
 
-    //  E incrementa y actualiza la puntuación
+    //  Add and update the score
     score += 10;
     scoreText.content = 'Score: ' + score;
 
