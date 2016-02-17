@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ![div](http://www.phaser.io/images/github/welcome-div2.png)
 
 # Phaser
@@ -419,3 +420,7 @@ All rights reserved.
 [game16]: http://phaser.io/news/2015/05/trappy-trap
 [game17]: http://phaser.io/news/2015/04/runaway-ruins
 [game18]: http://phaser.io/news/2015/04/ananias
+=======
+# GoBananas
+A fun game where monkeys go bananas for bananas! 
+>>>>>>> 85994e008edd3b905410e5be3f440f33b3cd2909
