@@ -98,39 +98,39 @@ function create() {
 
 function update() {
     /*
-    //  Hacer que el jugador y las estrellas colisionen con las plataformas
+    //  Collide the player and the stars with the platforms
     game.physics.collide(player, platforms);
     game.physics.collide(stars, platforms);
 
-    // Comprobar si el jugador se solapa con alguna estrella. Si es así, llamamos a la función 'collectStar'
+    // Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     game.physics.overlap(player, stars, collectStar, null, this);
 
-    //  Resetear la velocidad del jugador (movimiento)
+    //  Reset the players velocity (movement)
     player.body.velocity.x = 0;
 
-    if (cursors.left.isDown) //si se presiona la tecla izda..
+    if (cursors.left.isDown) //  Move to the left
     {
-        //  Mover a la izquierda
+        
         player.body.velocity.x = -150;
 
         player.animations.play('left');
     }
-    else if (cursors.right.isDown) //si se presiona derecha..
+    else if (cursors.right.isDown) 
     {
-        //  Mover a la derecha
+        //  Move to the right
         player.body.velocity.x = 150;
 
         player.animations.play('right');
     }
     else
     {
-        //  sino, quedarse quieto
+        //  //  Stand still
         player.animations.stop();
 
         player.frame = 4;
     }
     
-    //  Si se presiona la tecla arriba y el jugador está tocando el suelo, que salte
+    //  Allow the player to jump if they are touching the ground.
     if (cursors.up.isDown && player.body.touching.down)
     {
         player.body.velocity.y = -350;
