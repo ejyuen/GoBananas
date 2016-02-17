@@ -17,13 +17,10 @@
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
 function preload() {
-    
+
+    game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', 80, 69);
+    game.load.image("bed", "assets/img/bed.png");
     game.load.image('sky', 'assets/sky.png');
-    game.load.image('ground', 'assets/platform.png');
-    game.load.image('star', 'assets/star.png');
-    // game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
-    game.load.spritesheet('dude', 'assets/img/monkey_sprites.png', 80, 69);
-    
 
 }
 
@@ -36,8 +33,26 @@ var stars;
 var score = 0;
 var scoreText;
 
+var monkeyOne;
+var platforms;
+
 function create() {
-    
+
+    //Enable arcade physics
+    //game.physics.startSystem(Phaser.Physics.ARCADE);
+
+    //Creates background
+    game.add.sprite(0, 0, "sky");
+
+    //Creates the platforms group
+    platforms = game.add.group();
+    //platforms.enableBody = true;
+
+
+    var bed = platforms.create(0, game.world.height - 64, "bed");
+    bed.scale.setTo(2, 2);
+    bed.body.immovable = true;
+
     //  A simple background for our game
     game.add.sprite(0, 0, 'sky');
 
