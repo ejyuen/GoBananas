@@ -115,6 +115,13 @@ function create() {
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
+
+    // Implement time limit (start off with 60 seconds for a round)
+    game.time.events.add(Phaser.Timer.SECOND*60, endGame, this);
+}
+
+function endGame() {
+    // remove animations, stop sprites, do something with score
 }
 
 function update() {
@@ -125,7 +132,6 @@ function update() {
 
     // Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     game.physics.overlap(monkeyJumping, stars, collectStar, null, this);
-
 
     controls();
 }
