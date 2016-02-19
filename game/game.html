@@ -14,7 +14,10 @@
 
 <script type="text/javascript">
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+var GAME_WIDTH = 800;
+var GAME_HEIGHT = 600;
+
+var game = new Phaser.Game(GAME_WIDTH, GAME_HEIGHT, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
 function preload() {
 
@@ -38,15 +41,17 @@ var scoreText;
 //Holds the two monkeys
 var monkeyOne;
 var monkeyTwo;
-
 //Points to the monkey currently in the air
 var monkeyJumping;
+//Checks if monkey is in the air
 var isJumping = true;
+
+var landingDistance = 0;
+var defaultJumpSpeed = 200;
 
 //Gravity
 var gravity = 6;
 var platforms;
-
 
 function create() {
 
@@ -67,6 +72,10 @@ function create() {
     monkeyTwo = initializeMonkey(monkeyTwo, game.world.width - 122, game.world.height - 150, game);
     monkeyJumping = monkeyOne;
     
+    //Camera
+    game.camera.setBoundsToWorld();
+    game.camera.setSize(GAME_WIDTH, GAME_HEIGHT);
+
     //  Finally some stars to collect
     stars = game.add.group();
 
@@ -103,6 +112,9 @@ function update() {
     game.physics.collide(monkeyTwo, platforms);
     game.physics.collide(stars, platforms);
 
+    //Not working right now
+    //cameraUpdate();
+
     // Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     game.physics.overlap(monkeyJumping, stars, collectStar, null, this);
 
@@ -136,6 +148,16 @@ function initializeMonkey(monkey, startingX, startingY, game) {
     return monkey;
 }
 
+function cameraUpdate() {
+    //Updates the camera
+    if (monkeyJumping.x<GAME_HEIGHT/2) {
+        game.camera.follow(monkeyJumping);
+    } else {
+        game.camera.setPosition(0, 0);
+    }
+    game.camera.checkBounds();
+}
+
 function controls() {
     //  Reset the players velocity (movement)
     monkeyJumping.body.velocity.x = 0;
@@ -160,8 +182,12 @@ function controls() {
         }
 
         if (monkeyJumping.body.touching.down) {
+            //Sets the monkey to default movement
             monkeyJumping.body.velocity.x = 0;
             monkeyJumping.animations.stop();
+
+            //Updates the landing distance of the jumping monkey relative to the monkey on ground
+            landingDistance = Math.abs(monkeyTwo.body.screenX - monkeyOne.body.screenX);
 
             if (monkeyJumping == monkeyOne) {
                 monkeyJumping = monkeyTwo;
@@ -171,7 +197,7 @@ function controls() {
             isJumping = false;
         }
     } else {
-        monkeyJumping.body.velocity.y = -350;
+        monkeyJumping.body.velocity.y = -(defaultJumpSpeed + landingDistance / GAME_WIDTH * 400 + score);
         isJumping = true;
     }
 
