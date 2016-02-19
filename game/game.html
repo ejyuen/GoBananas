@@ -193,10 +193,8 @@ function controls() {
             isJumping = false;
         }
     } else {
-        if (cursors.up.isDown) {
-            monkeyJumping.body.velocity.y = -350;
-            isJumping = true;
-        }
+        monkeyJumping.body.velocity.y = -350;
+        isJumping = true;
     }
 
 }
