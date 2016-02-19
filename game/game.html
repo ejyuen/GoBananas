@@ -21,8 +21,8 @@ function preload() {
     game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', 80, 69);
     game.load.image("bed", "assets/img/bed.png");
     game.load.image('ground', 'assets/platform.png');
-    game.load.image('star', 'assets/star.png');
-    game.load.image('sky', 'assets/sky.png');
+    game.load.image('banana', 'assets/img/banana.png');
+    game.load.image('sky', 'assets/img/jungle.png');
 
 }
 
@@ -31,7 +31,7 @@ var player;
 var platforms;
 var cursors;
 
-var stars;
+var bananas;
 var score = 0;
 var scoreText;
 
@@ -89,20 +89,20 @@ function create() {
     // player.animations.add('right', [5, 6, 7, 8], 10, true);
     player.animations.add('right', [33, 32, 31, 30], 10, true);
     
-    //  Finally some stars to collect
-    stars = game.add.group();
+    //  Finally some bananas to collect
+    bananas = game.add.group();
 
     //  Here we'll create 12 of them evenly spaced apart
     for (var i = 0; i < 12; i++)
     {
-        //  Create a star inside of the 'stars' group
-        var star = stars.create(i * 70, 0, 'star');
+        //  Create a banana inside of the 'bananas' group
+        var banana = bananas.create(i * 70, 0, 'banana');
 
         //  Let gravity do its thing
-        star.body.gravity.y = 6;
+        banana.body.gravity.y = 6;
 
-        //  This just gives each star a slightly random bounce value
-        star.body.bounce.y = 0.7 + Math.random() * 0.2;
+        //  This just gives each banana a slightly random bounce value
+        banana.body.bounce.y = 0.7 + Math.random() * 0.2;
     }
 
     //  The score
@@ -113,12 +113,12 @@ function create() {
 }
 
 function update() {
-    //  Collide the player and the stars with the platforms
+    //  Collide the player and the bananas with the platforms
     game.physics.collide(player, platforms);
-    game.physics.collide(stars, platforms);
+    game.physics.collide(bananas, platforms);
 
-    // Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-    game.physics.overlap(player, stars, collectStar, null, this);
+    // Checks to see if the player overlaps with any of the bananas, if he does call the collectbanana function
+    game.physics.overlap(player, bananas, collectbanana, null, this);
 
     //  Reset the players velocity (movement)
     player.body.velocity.x = 0;
@@ -152,10 +152,10 @@ function update() {
     }
 }
 
-function collectStar (player, star) {
+function collectbanana (player, banana) {
     
-    // Removes the star from the screen
-    star.kill();
+    // Removes the banana from the screen
+    banana.kill();
 
     //  Add and update the score
     score += 10;
