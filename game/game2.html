@@ -11,19 +11,16 @@
     </style>
 </head>
 <body>
-
 <script type="text/javascript">
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
 function preload() {
-
     game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', 80, 69);
     game.load.image("bed", "assets/img/bed.png");
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
     game.load.image('sky', 'assets/sky.png');
-
 }
 
 
@@ -51,10 +48,8 @@ var gameEnded;
 var timer;
 var timerText;
 
-
 function create() {
-
-    //Creates background
+	//Creates background
     game.add.sprite(0, 0, "sky");
 
     //Creates the platforms group
@@ -64,14 +59,18 @@ function create() {
     bed.scale.setTo(2, 2);
     game.physics.enable(bed);
     bed.body.immovable = true;
+    bed.body.allowGravity = false;
 
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
+    game.physics.arcade.gravity.y = 200;
 
     // The player and its settings
     //monkeyOne = game.add.sprite(32, 0, 'monkey', []);
     monkeyOne = initializeMonkey(monkeyOne, 32, 0, game);
     monkeyTwo = initializeMonkey(monkeyTwo, game.world.width - 122, game.world.height - 150, game);
     monkeyJumping = monkeyOne;
-    
+
     //  Finally some stars to collect
     stars = game.add.group();
 
@@ -91,14 +90,31 @@ function create() {
     }
 
     //  The score
-    scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+    scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
 
     // Implement time limit (start off with 60 seconds for a round)
-    game.time.events.add(Phaser.Timer.SECOND*60, endGame, this);
-    timerText = game.add.text(620, 16, 'Time left: 60', {fontSize: '32px', fill: '#000'});
+    game.time.events.add(Phaser.Timer.SECOND*5, endGame, this);
+    timerText = game.add.text(600, 16, 'Time left: 60', {fontSize: '32px', fill: '#000'});
+}
+
+function initializeMonkey(monkey, startingX, startingY, game) {
+    // The player and its settings
+    monkey = game.add.sprite(startingX, startingY, 'monkey', 4);
+
+    game.physics.enable(monkey);
+
+    //  Player physics properties. Give the little guy a slight bounce.
+    monkey.body.bounce.y = 0;
+    monkey.body.collideWorldBounds = true; //choque con los bordes del juego
+
+    //  Our two animations, walking left and right.
+    monkey.animations.add('left', [0, 1, 2, 3], 10, true);
+    monkey.animations.add('right', [33, 32, 31, 30], 10, true);
+
+    return monkey;
 }
 
 function endGame() {
@@ -107,18 +123,21 @@ function endGame() {
 }
 
 function update() {
-    if (!gameEnded) {
-        //  Collide the player and the stars with the platforms
-        game.physics.arcade.collide(monkeyOne, platforms);
-        game.physics.arcade.collide(monkeyTwo, platforms);
-        game.physics.arcade.collide(stars, platforms);
+    //  Collide the player and the stars with the platforms
+    game.physics.arcade.collide(monkeyOne, platforms);
+    game.physics.arcade.collide(monkeyTwo, platforms);
+    game.physics.arcade.collide(stars, platforms);
 
+	if (!gameEnded) {
         // Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
         game.physics.arcade.overlap(monkeyJumping, stars, collectStar, null, this);
 
-        timerText.content = "Time left: " + Math.floor(game.time.events.duration);
         controls();
-        console.log(game.time.events.duration);
+        timerText.setText('Time left: ' + Math.ceil(game.time.events.duration/1000));
+    } else {
+    	monkeyJumping.animations.stop();
+    	monkeyJumping.body.velocity.x = 0;
+    	timerText.setText('Time left: 0')
     }
 }
 
@@ -129,28 +148,11 @@ function collectStar(monkey, star) {
 
     //  Add and update the score
     score += 10;
-    scoreText.content = 'Score: ' + score;
+    scoreText.setText('Score: ' + score);
 
 }
 
-function initializeMonkey(monkey, startingX, startingY, game) {
-    // The player and its settings
-    monkey = game.add.sprite(startingX, startingY, 'monkey', []);
-
-    game.physics.enable(monkey);
-
-    //  Player physics properties. Give the little guy a slight bounce.
-    monkey.body.bounce.y = 0;
-    monkey.body.gravity.y = gravity; //gravedad
-    monkey.body.collideWorldBounds = true; //choque con los bordes del juego
-
-    //  Our two animations, walking left and right.
-    monkey.animations.add('left', [0, 1, 2, 3], 10, true);
-    monkey.animations.add('right', [33, 32, 31, 30], 10, true);
-
-    return monkey;
-}
-
+// PROBLEM: stars are treated as a bed - if a monkey touches it, the other monkey jumps
 function controls() {
     //  Reset the players velocity (movement)
     monkeyJumping.body.velocity.x = 0;
@@ -191,7 +193,6 @@ function controls() {
     }
 
 }
-</script>
 
+</script>
 </body>
-</html>
