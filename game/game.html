@@ -37,7 +37,6 @@ function preload() {
 
 }
 
-
 var player;
 var platforms;
 var cursors;
@@ -55,7 +54,8 @@ var monkeyJumping;
 var isJumping = true;
 
 var landingDistance = 0;
-var defaultJumpSpeed = 200;
+var defaultJumpSpeed = SCREEN_HEIGHT;
+var scoreToJumpRatio = 2;
 
 //Gravity
 var gravity = 6;
@@ -105,6 +105,8 @@ function create() {
         star.body.bounce.y = 0.7 + Math.random() * 0.2;
     }
 
+    generateBananas(stars, 12);
+
     //  The score
     scoreText = game.add.text(16, game.camera.y + 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
@@ -132,6 +134,25 @@ function update() {
     game.physics.overlap(monkeyJumping, stars, collectStar, null, this);
 
     controls();
+}
+
+
+    /*
+    Function: Generates a specified amount of banana sprites 
+    @param: bananas: the group in which a banana will be added to
+    @param: amountOfBananas: the amount of bananas being generated
+    */
+function generateBananas(bananas, amountOfBananas) {
+    for (var i = 0; i < amountOfBananas; i++) {
+        //  Create a banana inside of the 'bananas' group
+        var banana = bananas.create(Math.random() * SCREEN_WIDTH, Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'star');
+
+        //  Let gravity do its thing
+        banana.body.gravity.y = 6;
+
+        //  This just gives each star a slightly random bounce value
+        banana.body.bounce.y = 0.7 + Math.random() * 0.2;
+    }
 }
 
 function collectStar(monkey, star) {
@@ -231,7 +252,7 @@ function controls() {
             isJumping = false;
         }
     } else {
-        monkeyJumping.body.velocity.y = -(defaultJumpSpeed + landingDistance / GAME_WIDTH * 400 + score);
+        monkeyJumping.body.velocity.y = -(defaultJumpSpeed*landingDistance / GAME_WIDTH  + score * scoreToJumpRatio);
         isJumping = true;
     }
 
