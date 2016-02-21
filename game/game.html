@@ -1,4 +1,5 @@
 
+
 <!doctype html> 
 <html lang="en"> 
 <head> 
@@ -15,8 +16,8 @@
 
 <script type="text/javascript">
 
-    var SCREEN_WIDTH = 800;
-    var SCREEN_HEIGHT = 600
+var SCREEN_WIDTH = 800;
+var SCREEN_HEIGHT = 600
 var GAME_WIDTH = 800;
 var GAME_HEIGHT = SCREEN_HEIGHT*2;
 var CAMERA_LOCATION = SCREEN_HEIGHT;
@@ -61,11 +62,14 @@ var defaultJumpSpeed = SCREEN_HEIGHT*3/4;
 var scoreToJumpRatio = GAME_HEIGHT/SCREEN_HEIGHT;
 
 //Gravity
-var gravity = 6;
+var gravity = 200;
 var platforms;
 
 //Sounds
 var biteSFX;
+var gameEnded = false;
+var timer;
+var timerText;
 
 function create() {
 
@@ -86,32 +90,20 @@ function create() {
     platforms = game.add.group();
     var bed = platforms.create(0, GAME_HEIGHT - GROUND_HEIGHT, "bed");
     bed.scale.setTo(2, 2);
+    game.physics.enable(bed);
     bed.body.immovable = true;
 
 
     // The player and its settings
-    monkeyOne = initializeMonkey(monkeyOne, 0, GAME_HEIGHT+MONKEY_HEIGHT, game);
-    monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH - MONKEY_WIDTH, GAME_HEIGHT - GROUND_HEIGHT, game);
+    monkeyOne = initializeMonkey(monkeyOne, 0, SCREEN_HEIGHT, game);
+    monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH - MONKEY_WIDTH, 1000/*GAME_HEIGHT - GROUND_HEIGHT*/, game);
     monkeyJumping = monkeyOne;
     
 
     //  Finally some stars to collect
     stars = game.add.group();
 
-    //  Here we'll create 12 of them evenly spaced apart
-    for (var i = 0; i < 12; i++)
-    {
-        //  Create a star inside of the 'stars' group
-        var star = stars.create(i * 70, 0, 'star');
-
-        //  Let gravity do its thing
-        star.body.gravity.y = 6;
-
-        //  This just gives each star a slightly random bounce value
-        star.body.bounce.y = 0.7 + Math.random() * 0.2;
-    }
-
-    generateBananas(stars, 12);
+    generateBananas(stars, 24);
 
     // The sounds
     biteSFX = game.add.audio("bite");
@@ -123,25 +115,34 @@ function create() {
     cursors = game.input.keyboard.createCursorKeys();
 
     // Implement time limit (start off with 60 seconds for a round)
-    //game.time.events.add(Phaser.Timer.SECOND*60, endGame, this);
+    game.time.events.add(Phaser.Timer.SECOND*60, endGame, this);
+    timerText = game.add.text(600, 816, 'Time left: 60', {fontSize: '32px', fill: '#000'});
 }
 function endGame() {
-    // remove animations, stop sprites, do something with score
+    //stop sprites, do something with score
+    gameEnded = true;
 }
 
 function update() {
     //  Collide the player and the stars with the platforms
-    game.physics.collide(monkeyOne, platforms);
-    game.physics.collide(monkeyTwo, platforms);
-    game.physics.collide(stars, platforms);
+    game.physics.arcade.collide(monkeyOne, platforms);
+    game.physics.arcade.collide(monkeyTwo, platforms);
+    game.physics.arcade.collide(stars, platforms);
 
     //Not working right now
     cameraUpdate();
 
-    // Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-    game.physics.overlap(monkeyJumping, stars, collectStar, null, this);
+    if (!gameEnded) {
+        // Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
+        game.physics.arcade.overlap(monkeyJumping, stars, collectStar, null, this);
 
-    controls();
+        controls();
+        timerText.setText('Time left: ' + Math.ceil(game.time.events.duration/1000));
+    } else {
+        monkeyJumping.animations.stop();
+        monkeyJumping.body.velocity.x = 0;
+        timerText.setText('Time left: 0');
+    }
 }
 
 
@@ -155,8 +156,9 @@ function generateBananas(bananas, amountOfBananas) {
         //  Create a banana inside of the 'bananas' group
         var banana = bananas.create(Math.random() * SCREEN_WIDTH - 26, Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'star');
 
+        game.physics.enable(banana);
         //  Let gravity do its thing
-        banana.body.gravity.y = 6;
+        banana.body.gravity.y = gravity;
 
         //  This just gives each star a slightly random bounce value
         banana.body.bounce.y = 0.7 + Math.random() * 0.2;
@@ -170,14 +172,16 @@ function collectStar(monkey, star) {
 
     //  Add and update the score
     score += 10;
-    scoreText.content = 'Score: ' + score;
+    scoreText.setText('Score: ' + score);
 
     biteSFX.play("", 0, 0.1, false, true);
 }
 
 function initializeMonkey(monkey, startingX, startingY, game) {
     // The player and its settings
-    monkey = game.add.sprite(startingX, startingY, 'monkey', []);
+    monkey = game.add.sprite(startingX, startingY, 'monkey', 4);
+
+    game.physics.enable(monkey);
 
     //  Player physics properties. Give the little guy a slight bounce.
     monkey.body.bounce.y = 0;
@@ -196,6 +200,7 @@ function cameraUpdate() {
     game.camera.setPosition(0,
         Math.min(monkeyJumping.body.y - game.camera.height / 2, SCREEN_HEIGHT));
     scoreText.y = game.camera.y + 16;
+    timerText.y = game.camera.y + 16;
 }
 
 //Debug function to get coordinate of mouse
