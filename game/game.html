@@ -14,18 +14,26 @@
 
 <script type="text/javascript">
 
+    var SCREEN_WIDTH = 800;
+    var SCREEN_HEIGHT = 600
 var GAME_WIDTH = 800;
-var GAME_HEIGHT = 600;
+var GAME_HEIGHT = SCREEN_HEIGHT*2;
+var CAMERA_LOCATION = SCREEN_HEIGHT;
+var CAMERA_ADJUSTMENT = 10;
 
-var game = new Phaser.Game(GAME_WIDTH, GAME_HEIGHT, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+var MONKEY_WIDTH = 80;
+var MONKEY_HEIGHT = 69;
+var GROUND_HEIGHT = 64;
+var game = new Phaser.Game(SCREEN_WIDTH, SCREEN_HEIGHT, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
 function preload() {
 
-    game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', 80, 69);
+    game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', MONKEY_WIDTH, MONKEY_HEIGHT);
     game.load.image("bed", "assets/img/bed.png");
     game.load.image('ground', 'assets/platform.png');
-    game.load.image('star', 'assets/star.png');
+    game.load.image('star', 'assets/img/banana.png');
     game.load.image('sky', 'assets/sky.png');
+    game.load.image('jungle', 'assets/img/jungle.png');
 
 }
 
@@ -55,26 +63,30 @@ var platforms;
 
 function create() {
 
-    //Creates background
+    //Sets the bound of the world
+    game.world.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    //Camera
+    game.camera.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+    adjustCameraLocation(0);
+
+
+    //Creates the background
+    game.add.sprite(0, GAME_HEIGHT - SCREEN_HEIGHT, "jungle");
     game.add.sprite(0, 0, "sky");
 
     //Creates the platforms group
     platforms = game.add.group();
-
-    var bed = platforms.create(0, game.world.height - 64, "bed");
+    var bed = platforms.create(0, GAME_HEIGHT - GROUND_HEIGHT, "bed");
     bed.scale.setTo(2, 2);
     bed.body.immovable = true;
 
 
     // The player and its settings
-    //monkeyOne = game.add.sprite(32, 0, 'monkey', []);
-    monkeyOne = initializeMonkey(monkeyOne, 32, 0, game);
-    monkeyTwo = initializeMonkey(monkeyTwo, game.world.width - 122, game.world.height - 150, game);
+    monkeyOne = initializeMonkey(monkeyOne, 0, GAME_HEIGHT+MONKEY_HEIGHT, game);
+    monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH - MONKEY_WIDTH, GAME_HEIGHT - GROUND_HEIGHT, game);
     monkeyJumping = monkeyOne;
     
-    //Camera
-    game.camera.setBoundsToWorld();
-    game.camera.setSize(GAME_WIDTH, GAME_HEIGHT);
 
     //  Finally some stars to collect
     stars = game.add.group();
@@ -93,13 +105,13 @@ function create() {
     }
 
     //  The score
-    scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+    scoreText = game.add.text(16, game.camera.y + 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
 
     // Implement time limit (start off with 60 seconds for a round)
-    game.time.events.add(Phaser.Timer.SECOND*60, endGame, this);
+    //game.time.events.add(Phaser.Timer.SECOND*60, endGame, this);
 }
 
 function endGame() {
@@ -113,7 +125,7 @@ function update() {
     game.physics.collide(stars, platforms);
 
     //Not working right now
-    //cameraUpdate();
+    cameraUpdate();
 
     // Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     game.physics.overlap(monkeyJumping, stars, collectStar, null, this);
@@ -150,34 +162,60 @@ function initializeMonkey(monkey, startingX, startingY, game) {
 
 function cameraUpdate() {
     //Updates the camera
-    if (monkeyJumping.x<GAME_HEIGHT/2) {
-        game.camera.follow(monkeyJumping);
+    if (monkeyJumping.body.y < GAME_HEIGHT-SCREEN_HEIGHT/2) {
+        //window.alert("Adjusting");
+        game.camera.setPosition(0, monkeyJumping.body.y - game.camera.height / 2);
     } else {
-        game.camera.setPosition(0, 0);
+        game.camera.setPosition(0, SCREEN_HEIGHT);
     }
-    game.camera.checkBounds();
+    scoreText.y = game.camera.y + 16;
 }
 
+//Debug function to get coordinate of mouse
+function mouseDebugger() {
+    if (game.input.mousePointer.isDown) {
+        console.log(game.input.mousePointer.position);
+    }
+}
+
+/*
+Adjusts camera location
+@param: int adjustment, which adjusts camera location
+*/
+function adjustCameraLocation(adjustment) {
+    CAMERA_LOCATION = Math.min(Math.max(0,CAMERA_LOCATION-adjustment),SCREEN_HEIGHT);
+    game.camera.setPosition(0, CAMERA_LOCATION);
+}
+
+/*
+Controls for camera movement
+*/
+function cameraControls() {
+    if (cursors.up.isDown) {
+        adjustCameraLocation(CAMERA_ADJUSTMENT);
+    } else if (cursors.down.isDown) {
+        adjustCameraLocation(-1 * CAMERA_ADJUSTMENT);
+    }
+}
 function controls() {
     //  Reset the players velocity (movement)
     monkeyJumping.body.velocity.x = 0;
-
+    mouseDebugger();
+    
     if (isJumping) {
-        if (cursors.left.isDown) //  Move to the left
+        if (cursors.left.isDown) 
         {
-
+            //  Move to the left
             monkeyJumping.body.velocity.x = -150;
-
             monkeyJumping.animations.play('left');
         }
         else if (cursors.right.isDown) {
             //  Move to the right
             monkeyJumping.body.velocity.x = 150;
-
             monkeyJumping.animations.play('right');
         }
         else {
-            //  //  Stand still
+            //   Stand still
             monkeyJumping.animations.stop();
         }
 
@@ -187,7 +225,7 @@ function controls() {
             monkeyJumping.animations.stop();
 
             //Updates the landing distance of the jumping monkey relative to the monkey on ground
-            landingDistance = Math.abs(monkeyTwo.body.screenX - monkeyOne.body.screenX);
+            landingDistance = Math.abs(monkeyTwo.body.x - monkeyOne.body.x);
 
             if (monkeyJumping == monkeyOne) {
                 monkeyJumping = monkeyTwo;
