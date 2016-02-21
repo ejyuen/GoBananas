@@ -1,9 +1,9 @@
 <!doctype html> 
 <html lang="en"> 
 <head> 
-	<meta charset="UTF-8" />
-	<title>Go Bananas</title>
-	<script type="text/javascript" src="js/phaser.min.js"></script>
+    <meta charset="UTF-8" />
+    <title>Go Bananas</title>
+    <script type="text/javascript" src="js/phaser.min.js"></script>
     <style type="text/css">
         body {
             margin: 0;
@@ -14,18 +14,28 @@
 
 <script type="text/javascript">
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+var SCREEN_WIDTH = 800;
+var SCREEN_HEIGHT = 600
+var GAME_WIDTH = 800;
+var GAME_HEIGHT = SCREEN_HEIGHT*2;
+var CAMERA_LOCATION = SCREEN_HEIGHT;
+var CAMERA_ADJUSTMENT = 10;
+
+var MONKEY_WIDTH = 80;
+var MONKEY_HEIGHT = 69;
+var GROUND_HEIGHT = 64;
+var game = new Phaser.Game(SCREEN_WIDTH, SCREEN_HEIGHT, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
 function preload() {
 
-    game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', 80, 69);
+    game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', MONKEY_WIDTH, MONKEY_HEIGHT);
     game.load.image("bed", "assets/img/bed.png");
     game.load.image('ground', 'assets/platform.png');
-    game.load.image('star', 'assets/star.png');
+    game.load.image('star', 'assets/img/banana.png');
     game.load.image('sky', 'assets/sky.png');
+    game.load.image('jungle', 'assets/img/jungle.png');
 
 }
-
 
 var player;
 var platforms;
@@ -38,40 +48,52 @@ var scoreText;
 //Holds the two monkeys
 var monkeyOne;
 var monkeyTwo;
-
 //Points to the monkey currently in the air
 var monkeyJumping;
+//Checks if monkey is in the air
 var isJumping = true;
 
+var landingDistance = 0;
+var defaultJumpSpeed = SCREEN_HEIGHT*3/4;
+var scoreToJumpRatio = GAME_HEIGHT/SCREEN_HEIGHT;
+
 //Gravity
-var gravity = 6;
+var gravity = 200;
 var platforms;
 
-var gameEnded;
+var gameEnded = false;
 var timer;
 var timerText;
 
-
 function create() {
 
-    //Creates background
+    //Sets the bound of the world
+    game.world.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    //Camera
+    game.camera.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+    //adjustCameraLocation(0);
+    game.camera.setPosition(0, CAMERA_LOCATION);
+
+
+    //Creates the background
+    game.add.sprite(0, GAME_HEIGHT - SCREEN_HEIGHT, "jungle");
     game.add.sprite(0, 0, "sky");
 
     //Creates the platforms group
     platforms = game.add.group();
-
-    var bed = platforms.create(0, game.world.height - 64, "bed");
+    var bed = platforms.create(0, GAME_HEIGHT - GROUND_HEIGHT, "bed");
     bed.scale.setTo(2, 2);
     game.physics.enable(bed);
     bed.body.immovable = true;
 
 
     // The player and its settings
-    //monkeyOne = game.add.sprite(32, 0, 'monkey', []);
-    monkeyOne = initializeMonkey(monkeyOne, 32, 0, game);
-    monkeyTwo = initializeMonkey(monkeyTwo, game.world.width - 122, game.world.height - 150, game);
+    monkeyOne = initializeMonkey(monkeyOne, 0, SCREEN_HEIGHT, game);
+    monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH - MONKEY_WIDTH, 1000/*GAME_HEIGHT - GROUND_HEIGHT*/, game);
     monkeyJumping = monkeyOne;
     
+
     //  Finally some stars to collect
     stars = game.add.group();
 
@@ -90,15 +112,17 @@ function create() {
         star.body.bounce.y = 0.7 + Math.random() * 0.2;
     }
 
+    generateBananas(stars, 12);
+
     //  The score
-    scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+    scoreText = game.add.text(16, game.camera.y + 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
 
     // Implement time limit (start off with 60 seconds for a round)
     game.time.events.add(Phaser.Timer.SECOND*60, endGame, this);
-    timerText = game.add.text(620, 16, 'Time left: 60', {fontSize: '32px', fill: '#000'});
+    timerText = game.add.text(600, 816, 'Time left: 60', {fontSize: '32px', fill: '#000'});
 }
 
 function endGame() {
@@ -107,18 +131,44 @@ function endGame() {
 }
 
 function update() {
-    if (!gameEnded) {
-        //  Collide the player and the stars with the platforms
-        game.physics.arcade.collide(monkeyOne, platforms);
-        game.physics.arcade.collide(monkeyTwo, platforms);
-        game.physics.arcade.collide(stars, platforms);
+    //  Collide the player and the stars with the platforms
+    game.physics.arcade.collide(monkeyOne, platforms);
+    game.physics.arcade.collide(monkeyTwo, platforms);
+    game.physics.arcade.collide(stars, platforms);
 
+    //Not working right now
+    cameraUpdate();
+
+    if (!gameEnded) {
         // Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
         game.physics.arcade.overlap(monkeyJumping, stars, collectStar, null, this);
 
-        timerText.content = "Time left: " + Math.floor(game.time.events.duration);
         controls();
-        console.log(game.time.events.duration);
+        timerText.setText('Time left: ' + Math.ceil(game.time.events.duration/1000));
+    } else {
+        monkeyJumping.animations.stop();
+        monkeyJumping.body.velocity.x = 0;
+        timerText.setText('Time left: 0');
+    }
+}
+
+
+    /*
+    Function: Generates a specified amount of banana sprites 
+    @param: bananas: the group in which a banana will be added to
+    @param: amountOfBananas: the amount of bananas being generated
+    */
+function generateBananas(bananas, amountOfBananas) {
+    for (var i = 0; i < amountOfBananas; i++) {
+        //  Create a banana inside of the 'bananas' group
+        var banana = bananas.create(Math.random() * SCREEN_WIDTH - 26, Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'star');
+
+        game.physics.enable(banana);
+        //  Let gravity do its thing
+        banana.body.gravity.y = 6;
+
+        //  This just gives each star a slightly random bounce value
+        banana.body.bounce.y = 0.7 + Math.random() * 0.2;
     }
 }
 
@@ -129,13 +179,13 @@ function collectStar(monkey, star) {
 
     //  Add and update the score
     score += 10;
-    scoreText.content = 'Score: ' + score;
+    scoreText.setText('Score: ' + score);
 
 }
 
 function initializeMonkey(monkey, startingX, startingY, game) {
     // The player and its settings
-    monkey = game.add.sprite(startingX, startingY, 'monkey', []);
+    monkey = game.add.sprite(startingX, startingY, 'monkey', 4);
 
     game.physics.enable(monkey);
 
@@ -151,32 +201,68 @@ function initializeMonkey(monkey, startingX, startingY, game) {
     return monkey;
 }
 
+function cameraUpdate() {
+    //Updates the camera
+    game.camera.setPosition(0,
+        Math.min(monkeyJumping.body.y - game.camera.height / 2, SCREEN_HEIGHT));
+    scoreText.y = game.camera.y + 16;
+    timerText.y = game.camera.y + 16;
+}
+
+//Debug function to get coordinate of mouse
+function mouseDebugger() {
+    if (game.input.mousePointer.isDown) {
+        console.log(game.input.mousePointer.position);
+    }
+}
+
+/*
+Adjusts camera location
+@param: int adjustment, which adjusts camera location
+*/
+function adjustCameraLocation(adjustment) {
+    CAMERA_LOCATION = Math.min(Math.max(0,CAMERA_LOCATION-adjustment),SCREEN_HEIGHT);
+    game.camera.setPosition(0, CAMERA_LOCATION);
+}
+
+/*
+Controls for camera movement
+*/
+function cameraControls() {
+    if (cursors.up.isDown) {
+        adjustCameraLocation(CAMERA_ADJUSTMENT);
+    } else if (cursors.down.isDown) {
+        adjustCameraLocation(-1 * CAMERA_ADJUSTMENT);
+    }
+}
 function controls() {
     //  Reset the players velocity (movement)
     monkeyJumping.body.velocity.x = 0;
-
+    
     if (isJumping) {
-        if (cursors.left.isDown) //  Move to the left
+        if (cursors.left.isDown) 
         {
-
+            //  Move to the left
             monkeyJumping.body.velocity.x = -150;
-
             monkeyJumping.animations.play('left');
         }
         else if (cursors.right.isDown) {
             //  Move to the right
             monkeyJumping.body.velocity.x = 150;
-
             monkeyJumping.animations.play('right');
         }
         else {
-            //  //  Stand still
+            //   Stand still
             monkeyJumping.animations.stop();
         }
 
         if (monkeyJumping.body.touching.down) {
+            //Sets the monkey to default movement
             monkeyJumping.body.velocity.x = 0;
             monkeyJumping.animations.stop();
+
+            //Updates the landing distance of the jumping monkey relative to the monkey on ground
+            landingDistance = Math.abs(monkeyTwo.body.x - monkeyOne.body.x);
 
             if (monkeyJumping == monkeyOne) {
                 monkeyJumping = monkeyTwo;
@@ -186,7 +272,7 @@ function controls() {
             isJumping = false;
         }
     } else {
-        monkeyJumping.body.velocity.y = -350;
+        monkeyJumping.body.velocity.y = -(defaultJumpSpeed*landingDistance / GAME_WIDTH  + score * scoreToJumpRatio);
         isJumping = true;
     }
 
