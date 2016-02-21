@@ -1,3 +1,4 @@
+
 <!doctype html> 
 <html lang="en"> 
 <head> 
@@ -35,6 +36,8 @@ function preload() {
     game.load.image('sky', 'assets/sky.png');
     game.load.image('jungle', 'assets/img/jungle.png');
 
+    game.load.audio('bite', 'assets/audio/bite.mp3');
+
 }
 
 var player;
@@ -60,6 +63,9 @@ var scoreToJumpRatio = GAME_HEIGHT/SCREEN_HEIGHT;
 //Gravity
 var gravity = 6;
 var platforms;
+
+//Sounds
+var biteSFX;
 
 function create() {
 
@@ -107,6 +113,9 @@ function create() {
 
     generateBananas(stars, 12);
 
+    // The sounds
+    biteSFX = game.add.audio("bite");
+
     //  The score
     scoreText = game.add.text(16, game.camera.y + 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
@@ -116,7 +125,6 @@ function create() {
     // Implement time limit (start off with 60 seconds for a round)
     //game.time.events.add(Phaser.Timer.SECOND*60, endGame, this);
 }
-
 function endGame() {
     // remove animations, stop sprites, do something with score
 }
@@ -164,6 +172,7 @@ function collectStar(monkey, star) {
     score += 10;
     scoreText.content = 'Score: ' + score;
 
+    biteSFX.play("", 0, 0.1, false, true);
 }
 
 function initializeMonkey(monkey, startingX, startingY, game) {
