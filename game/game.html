@@ -54,8 +54,8 @@ var monkeyJumping;
 var isJumping = true;
 
 var landingDistance = 0;
-var defaultJumpSpeed = SCREEN_HEIGHT;
-var scoreToJumpRatio = 2;
+var defaultJumpSpeed = SCREEN_HEIGHT*3/4;
+var scoreToJumpRatio = GAME_HEIGHT/SCREEN_HEIGHT;
 
 //Gravity
 var gravity = 6;
@@ -145,7 +145,7 @@ function update() {
 function generateBananas(bananas, amountOfBananas) {
     for (var i = 0; i < amountOfBananas; i++) {
         //  Create a banana inside of the 'bananas' group
-        var banana = bananas.create(Math.random() * SCREEN_WIDTH, Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'star');
+        var banana = bananas.create(Math.random() * SCREEN_WIDTH - 26, Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'star');
 
         //  Let gravity do its thing
         banana.body.gravity.y = 6;
