@@ -68,6 +68,8 @@ var platforms;
 
 //Sounds
 var biteSFX;
+
+//Timer variables
 var gameEnded = false;
 var timer;
 var timerText;
@@ -145,8 +147,6 @@ function switchMonkey() {
 
 function update() {
     //  Collide the player and the stars with the platforms
-    //game.physics.arcade.collide(monkeyOne, platforms, switchMonkey);
-    //game.physics.arcade.collide(monkeyTwo, platforms, switchMonkey);
     game.physics.arcade.collide(stars, platforms);
 
     //Not working right now
@@ -162,6 +162,8 @@ function update() {
         monkeyJumping.animations.stop();
         monkeyJumping.body.velocity.x = 0;
         timerText.setText('Time left: 0');
+        game.physics.arcade.collide(monkeyOne, platforms);
+        game.physics.arcade.collide(monkeyTwo, platforms);
     }
 }
 
@@ -194,7 +196,7 @@ function collectStar(monkey, star) {
     score += 10;
     scoreText.setText('Score: ' + score);
 
-    biteSFX.play("", 0, 0.1, false, true);
+    biteSFX.play("", 0, 0.5, false, true);
 }
 
 function initializeMonkey(monkey, startingX, startingY, game) {
