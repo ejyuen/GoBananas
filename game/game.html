@@ -68,7 +68,8 @@ function create() {
 
     //Camera
     game.camera.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-    adjustCameraLocation(0);
+    //adjustCameraLocation(0);
+    game.camera.setPosition(0, CAMERA_LOCATION);
 
 
     //Creates the background
@@ -162,12 +163,8 @@ function initializeMonkey(monkey, startingX, startingY, game) {
 
 function cameraUpdate() {
     //Updates the camera
-    if (monkeyJumping.body.y < GAME_HEIGHT-SCREEN_HEIGHT/2) {
-        //window.alert("Adjusting");
-        game.camera.setPosition(0, monkeyJumping.body.y - game.camera.height / 2);
-    } else {
-        game.camera.setPosition(0, SCREEN_HEIGHT);
-    }
+    game.camera.setPosition(0,
+        Math.min(monkeyJumping.body.y - game.camera.height / 2, SCREEN_HEIGHT));
     scoreText.y = game.camera.y + 16;
 }
 
@@ -200,7 +197,6 @@ function cameraControls() {
 function controls() {
     //  Reset the players velocity (movement)
     monkeyJumping.body.velocity.x = 0;
-    mouseDebugger();
     
     if (isJumping) {
         if (cursors.left.isDown) 
