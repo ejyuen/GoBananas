@@ -27,7 +27,7 @@ var MONKEY_WIDTH = 80;
 var MONKEY_HEIGHT = 69;
 var GROUND_HEIGHT = 64;
 var game = new Phaser.Game(SCREEN_WIDTH, SCREEN_HEIGHT, Phaser.AUTO, '', { preload: preload, create: create, update: update });
-
+var bananaTimer;
 function preload() {
 
     game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', MONKEY_WIDTH, MONKEY_HEIGHT);
@@ -54,6 +54,7 @@ var monkeyOne;
 var monkeyTwo;
 //Points to the monkey currently in the air
 var monkeyJumping;
+var otherMonkey;
 //Checks if monkey is in the air
 var isJumping = true;
 
@@ -67,9 +68,13 @@ var platforms;
 
 //Sounds
 var biteSFX;
+
+//Timer variables
 var gameEnded = false;
-var timer;
+var bananaTimer;
+var timerCounter = 60;
 var timerText;
+
 
 function create() {
 
@@ -97,11 +102,12 @@ function create() {
     monkeyOne = initializeMonkey(monkeyOne, 0, SCREEN_HEIGHT, game);
     monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH - MONKEY_WIDTH, 1000/*GAME_HEIGHT - GROUND_HEIGHT*/, game);
     monkeyJumping = monkeyOne;
+    otherMonkey = monkeyTwo;
 
     //  Finally some stars to collect
     stars = game.add.group();
 
-    //generateBananas(stars, 24);
+    generateBananas(stars, 24);
 
     // The sounds
     biteSFX = game.add.audio("bite");
@@ -110,22 +116,47 @@ function create() {
     scoreText = game.add.text(16, game.camera.y + 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
     //  Our controls.
+
+
     cursors = game.input.keyboard.createCursorKeys();
 
     // Implement time limit (start off with 60 seconds for a round)
     game.time.events.add(Phaser.Timer.SECOND * 60, endGame, this);
-    game.time.events.loop(Phaser.Timer.SECOND * 15, generateBananas(stars, 24), this);
+    game.time.events.loop(Phaser.Timer.SECOND * 5, generateBananas, this, stars, 10);
+    game.time.events.loop(Phaser.Timer.SECOND, updateTimer, this);
+
     timerText = game.add.text(600, 816, 'Time left: 60', {fontSize: '32px', fill: '#000'});
 }
+
+function updateTimer(){
+    timerCounter = Math.max(0,timerCounter - 1);
+}
+
 function endGame() {
     //stop sprites, do something with score
     gameEnded = true;
 }
 
+function switchMonkey() {
+    //Sets the monkey to default movement
+    monkeyJumping.body.velocity.x = 0;
+    monkeyJumping.animations.stop();
+
+    //Updates the landing distance of the jumping monkey relative to the monkey on ground
+    landingDistance = Math.abs(monkeyTwo.body.x - monkeyOne.body.x);
+
+    if (monkeyJumping == monkeyOne) {
+        monkeyJumping = monkeyTwo;
+        otherMonkey = monkeyOne;
+    } else {
+        monkeyJumping = monkeyOne;
+        otherMonkey = monkeyTwo;
+    }
+    isJumping = false;
+}
+
 function update() {
     //  Collide the player and the stars with the platforms
-    game.physics.arcade.collide(monkeyOne, platforms);
-    game.physics.arcade.collide(monkeyTwo, platforms);
     game.physics.arcade.collide(stars, platforms);
 
     //Not working right now
@@ -136,31 +167,34 @@ function update() {
         game.physics.arcade.overlap(monkeyJumping, stars, collectStar, null, this);
 
         controls();
-        timerText.setText('Time left: ' + Math.ceil(game.time.events.duration/1000));
+        timerText.setText('Time left: ' + timerCounter);
     } else {
         monkeyJumping.animations.stop();
         monkeyJumping.body.velocity.x = 0;
         timerText.setText('Time left: 0');
+        game.physics.arcade.collide(monkeyOne, platforms);
+        game.physics.arcade.collide(monkeyTwo, platforms);
     }
 }
-
-
     /*
     Function: Generates a specified amount of banana sprites 
     @param: bananas: the group in which a banana will be added to
     @param: amountOfBananas: the amount of bananas being generated
     */
 function generateBananas(bananas, amountOfBananas) {
-    for (var i = 0; i < amountOfBananas; i++) {
-        //  Create a banana inside of the 'bananas' group
-        var banana = bananas.create(Math.random() * SCREEN_WIDTH - 26, Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'star');
+    if (gameEnded != true) {
+        for (var i = 0; i < amountOfBananas; i++) {
+            //console.log(i);
+            //  Create a banana inside of the 'bananas' group
+            var banana = bananas.create(Math.random() * SCREEN_WIDTH - 26, Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'star');
 
-        game.physics.enable(banana);
-        //  Let gravity do its thing
-        banana.body.gravity.y = gravity;
+            game.physics.enable(banana);
+            //  Let gravity do its thing
+            banana.body.gravity.y = gravity;
 
-        //  This just gives each star a slightly random bounce value
-        banana.body.bounce.y = 0.7 + Math.random() * 0.2;
+            //  This just gives each star a slightly random bounce value
+            banana.body.bounce.y = 0.7 + Math.random() * 0.2;
+        }
     }
 }
 
@@ -173,7 +207,7 @@ function collectStar(monkey, star) {
     score += 10;
     scoreText.setText('Score: ' + score);
 
-    biteSFX.play("", 0, 0.1, false, true);
+    biteSFX.play("", 0, 0.5, false, true);
 }
 
 function initializeMonkey(monkey, startingX, startingY, game) {
@@ -248,21 +282,8 @@ function controls() {
             monkeyJumping.animations.stop();
         }
 
-        if (monkeyJumping.body.touching.down) {
-            //Sets the monkey to default movement
-            monkeyJumping.body.velocity.x = 0;
-            monkeyJumping.animations.stop();
-
-            //Updates the landing distance of the jumping monkey relative to the monkey on ground
-            landingDistance = Math.abs(monkeyTwo.body.x - monkeyOne.body.x);
-
-            if (monkeyJumping == monkeyOne) {
-                monkeyJumping = monkeyTwo;
-            } else {
-                monkeyJumping = monkeyOne;
-            }
-            isJumping = false;
-        }
+        game.physics.arcade.collide(monkeyJumping, platforms, switchMonkey);
+        game.physics.arcade.collide(otherMonkey, platforms);
     } else {
         monkeyJumping.body.velocity.y = -(defaultJumpSpeed*landingDistance / GAME_WIDTH  + score * scoreToJumpRatio);
         isJumping = true;
