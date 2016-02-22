@@ -93,17 +93,15 @@ function create() {
     game.physics.enable(bed);
     bed.body.immovable = true;
 
-
     // The player and its settings
     monkeyOne = initializeMonkey(monkeyOne, 0, SCREEN_HEIGHT, game);
     monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH - MONKEY_WIDTH, 1000/*GAME_HEIGHT - GROUND_HEIGHT*/, game);
     monkeyJumping = monkeyOne;
-    
 
     //  Finally some stars to collect
     stars = game.add.group();
 
-    generateBananas(stars, 24);
+    //generateBananas(stars, 24);
 
     // The sounds
     biteSFX = game.add.audio("bite");
@@ -115,7 +113,8 @@ function create() {
     cursors = game.input.keyboard.createCursorKeys();
 
     // Implement time limit (start off with 60 seconds for a round)
-    game.time.events.add(Phaser.Timer.SECOND*60, endGame, this);
+    game.time.events.add(Phaser.Timer.SECOND * 60, endGame, this);
+    game.time.events.loop(Phaser.Timer.SECOND * 15, generateBananas(stars, 24), this);
     timerText = game.add.text(600, 816, 'Time left: 60', {fontSize: '32px', fill: '#000'});
 }
 function endGame() {
@@ -232,7 +231,6 @@ function cameraControls() {
 function controls() {
     //  Reset the players velocity (movement)
     monkeyJumping.body.velocity.x = 0;
-    
     if (isJumping) {
         if (cursors.left.isDown) 
         {
