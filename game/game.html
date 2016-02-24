@@ -17,7 +17,7 @@
 var SCREEN_WIDTH = 800;
 var SCREEN_HEIGHT = 600
 var GAME_WIDTH = 800;
-var GAME_HEIGHT = SCREEN_HEIGHT*2;
+var GAME_HEIGHT = SCREEN_HEIGHT*3;
 var CAMERA_LOCATION = SCREEN_HEIGHT;
 var CAMERA_ADJUSTMENT = 10;
 
@@ -60,7 +60,7 @@ var isJumping = true;
 var landingDistance = 0;
 var jumpSpeed = 0;
 var defaultJumpSpeed = SCREEN_HEIGHT;
-var scoreToJumpRatio = SCREEN_HEIGHT/1000;
+var scoreToJumpRatio = GAME_HEIGHT/SCREEN_HEIGHT;
 
 //Gravity
 var gravity = 200;
@@ -90,6 +90,7 @@ function create() {
     //Creates the background
     game.add.sprite(0, GAME_HEIGHT - SCREEN_HEIGHT, "jungle");
     game.add.sprite(0, 0, "sky");
+    game.add.sprite(0, SCREEN_HEIGHT, "sky");
 
     //Creates the platforms group
     platforms = game.add.group();
@@ -116,8 +117,6 @@ function create() {
     scoreText = game.add.text(16, game.camera.y + 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
     //  Our controls.
-
-
     cursors = game.input.keyboard.createCursorKeys();
 
     // Implement time limit (bananat off with 60 seconds for a round)
@@ -235,14 +234,15 @@ function collisionUpdate() {
     //Updates the camera position, as well as score and timer text
 function cameraUpdate() {  
     game.camera.setPosition(0,
-        Math.min(monkeyJumping.body.y - game.camera.height / 2, SCREEN_HEIGHT));
+        Math.max(monkeyJumping.body.y - SCREEN_HEIGHT / 2, SCREEN_HEIGHT));
     scoreText.y = game.camera.y + 16;
     timerText.y = game.camera.y + 16;
 }
 
     //Updates jump height
 function jumpSpeedUpdate() {
-    jumpSpeed = defaultJumpSpeed * (Math.max(1 / 2, landingDistance / GAME_WIDTH)) + score * scoreToJumpRatio;
+    jumpSpeed = defaultJumpSpeed * (Math.max(1 / 2, landingDistance / GAME_WIDTH)) + Math.max(0,score-previousScore) * scoreToJumpRatio;
+    previousScore = score;
 }
 
 //Debug function to get coordinate of mouse
@@ -257,7 +257,7 @@ Adjusts camera location
 @param: int adjustment, which adjusts camera location
 */
 function adjustCameraLocation(adjustment) {
-    CAMERA_LOCATION = Math.min(Math.max(0,CAMERA_LOCATION-adjustment),SCREEN_HEIGHT);
+    CAMERA_LOCATION = Math.min(Math.max(0,CAMERA_LOCATION-adjustment), SCREEN_HEIGHT);
     game.camera.setPosition(0, CAMERA_LOCATION);
 }
 
@@ -277,6 +277,7 @@ function removeBanana(banana, ground) {
 }
 
 function controls() {
+    //mouseDebugger();
     //  Reset the players velocity (movement)
     monkeyJumping.body.velocity.x = 0;
     if (isJumping) {
