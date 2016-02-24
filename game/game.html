@@ -39,6 +39,8 @@ function preload() {
     game.load.image('sky', 'assets/sky.png');
     game.load.image('jungle', 'assets/img/jungle.png');
     game.load.image("rock", "assets/img/rock.png");
+    game.load.image("transition", "assets/img/transition.png");
+
 
     game.load.audio('bite', 'assets/audio/bite.mp3');
     game.load.audio("bgm", "assets/audio/forestBGM.mp3");
@@ -132,7 +134,8 @@ function initializeWorld() {
     //Creates the background
     game.add.sprite(0, GAME_HEIGHT - SCREEN_HEIGHT, "jungle");
     game.add.sprite(0, 0, "sky");
-    game.add.sprite(0, SCREEN_HEIGHT, "sky");
+    game.add.sprite(0, SCREEN_HEIGHT, "transition");
+
 
     //Creates the platforms group
     platforms = game.add.group();
