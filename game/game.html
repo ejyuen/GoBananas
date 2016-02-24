@@ -14,13 +14,17 @@
 
 <script type="text/javascript">
 
+//Game dimension variables
 var SCREEN_WIDTH = 800;
 var SCREEN_HEIGHT = 600
 var GAME_WIDTH = 800;
-var GAME_HEIGHT = SCREEN_HEIGHT*2;
-var CAMERA_LOCATION = SCREEN_HEIGHT;
+var GAME_HEIGHT = SCREEN_HEIGHT * 3;
+
+//Camera variables
+var CAMERA_LOCATION = GAME_HEIGHT-SCREEN_HEIGHT;
 var CAMERA_ADJUSTMENT = 10;
 
+//image varables
 var MONKEY_WIDTH = 80;
 var MONKEY_HEIGHT = 69;
 var GROUND_HEIGHT = 64;
@@ -31,34 +35,48 @@ function preload() {
     game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', MONKEY_WIDTH, MONKEY_HEIGHT);
     game.load.image("bed", "assets/img/bed.png");
     game.load.image('ground', 'assets/platform.png');
-    game.load.image('star', 'assets/img/banana.png');
+    game.load.image('banana', 'assets/img/banana.png');
+    game.load.image("bundle","assets/img/coolBanana.png")
     game.load.image('sky', 'assets/sky.png');
     game.load.image('jungle', 'assets/img/jungle.png');
+    game.load.image("rock", "assets/img/rock.png");
+    game.load.image("transition", "assets/img/transition.png");
+    game.load.image('button', "assets/img/button.png");
+    game.load.image('title', "assets/img/title.png");
 
-    //game.load.audio('bite', 'assets/audio/bite.mp3');
-
+    game.load.audio('bite', 'assets/audio/bite.mp3');
+    game.load.audio("bgm", "assets/audio/forestBGM.mp3");
+    game.load.audio("forest", "assets/audio/forest_ambience.mp3");
+    game.load.audio("rustle", "assets/audio/bush_rustle.wav");
 }
 
 var player;
 var platforms;
 var cursors;
 
-var stars;
+var bananas;
+var coolBanana;
+var rocks;
 var score = 0;
+var previousScore = 0;
 var scoreText;
 
-//Holds the two monkeys
+//Monkey variables
 var monkeyOne;
 var monkeyTwo;
-//Points to the monkey currently in the air
 var monkeyJumping;
 var otherMonkey;
-//Checks if monkey is in the air
-var isJumping = true;
 
+//Variables relating to monkey's states
+var isJumping = true;
+var crashDrop = false;
+
+//Parameters for monkey movement
 var landingDistance = 0;
-var defaultJumpSpeed = SCREEN_HEIGHT*3/4;
-var scoreToJumpRatio = GAME_HEIGHT/SCREEN_HEIGHT;
+var jumpSpeed = 0;
+var defaultJumpSpeed = SCREEN_HEIGHT;
+var scoreToJumpRatio = GAME_HEIGHT / SCREEN_HEIGHT;
+var verticalSpeed = 150;
 
 //Gravity
 var gravity = 200;
@@ -66,10 +84,13 @@ var platforms;
 
 //Sounds
 var biteSFX;
+var bgm;
+var forestAmbience1;
+var rustleSFX;
 
 //Timer variables
 var gameEnded = false;
-var timer;
+var timerCounter = 60;
 var timerText;
 
 var gameStarted = false;
@@ -80,17 +101,31 @@ var creditsText;
 var startButton;
 
 function create() {
+    initializeWorld();
+
+    monkeyStartOne = game.add.sprite(25, GAME_HEIGHT-GROUND_HEIGHT-MONKEY_HEIGHT, 'monkey', 4);
+    monkeyStartTwo = game.add.sprite(700, GAME_HEIGHT-GROUND_HEIGHT-MONKEY_HEIGHT, 'monkey', 4);
+
+    // add text for title
+    titleText = game.add.text(100, 1250, "Go Bananas!", {fontSize: '100px', fill: '#fff', fontFamily: 'Trebuchet MS'});
+    creditsText = game.add.text(GAME_WIDTH/2-65, 1600, "Kevin Escobar\nDeanna Hambleton\nErica Yuen", {fontSize: '16px', fill: '000', align: 'center'});
+    // add button
+    startButton = game.add.button(390, 1500, 'button', buttonCallback, this);
+}
+
+function initializeWorld() {
     //Sets the bound of the world
     game.world.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    //Camera
+    //Sets the starting camera size and settings
     game.camera.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-    //adjustCameraLocation(0);
     game.camera.setPosition(0, CAMERA_LOCATION);
 
     //Creates the background
     game.add.sprite(0, GAME_HEIGHT - SCREEN_HEIGHT, "jungle");
     game.add.sprite(0, 0, "sky");
+    game.add.sprite(0, SCREEN_HEIGHT, "transition");
+
 
     //Creates the platforms group
     platforms = game.add.group();
@@ -98,15 +133,6 @@ function create() {
     bed.scale.setTo(2, 2);
     game.physics.enable(bed);
     bed.body.immovable = true;
-
-    monkeyStartOne = game.add.sprite(25, 1070, 'monkey', 4); //change y
-    monkeyStartTwo = game.add.sprite(700, 1070, 'monkey', 4); //ditto
-
-    // add text for title
-    titleText = game.add.text(100, 650, "Go Bananas!", {fontSize: '100px', fill: '#fff', fontFamily: 'Trebuchet MS'});
-    creditsText = game.add.text(315, 1000, "Kevin Escobar\nDeanna Hambleton\nErica Yuen", {fontSize: '22px', fill: '000', align: 'center'});
-    // add button
-    startButton = game.add.button(390, 900, 'button', buttonCallback, this);
 }
 
 function buttonCallback() {
@@ -121,32 +147,65 @@ function buttonCallback() {
     
 
 function createGame() {
-    // The player and its settings
-    monkeyOne = initializeMonkey(monkeyOne, 0, SCREEN_HEIGHT, game);
-    monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH - MONKEY_WIDTH, 1000/*GAME_HEIGHT - GROUND_HEIGHT*/, game);
+    // Initializes the monkeys
+    monkeyOne = initializeMonkey(monkeyOne, GAME_WIDTH/2 - MONKEY_WIDTH, GAME_HEIGHT - GROUND_HEIGHT - MONKEY_HEIGHT, game);
+    monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH/2 + MONKEY_WIDTH, GAME_HEIGHT - GROUND_HEIGHT - MONKEY_HEIGHT, game);
     monkeyJumping = monkeyOne;
     otherMonkey = monkeyTwo;
-    
-    //  Finally some stars to collect
-    stars = game.add.group();
 
-    generateBananas(stars, 24);
+    // Creates banana and rock groups
+    bananas = game.add.group();
+    rocks = game.add.group();
+    coolBanana = game.add.group();
 
-    // The sounds
-    //biteSFX = game.add.audio("bite");
+    // Creates intial banana amount
+    generateBananas(bananas, 24);
 
-    //  The score
+    initializeSound();
+    initializeTimeEvents();
+    // Initializes score
     scoreText = game.add.text(16, game.camera.y + 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
-    //  Our controls.
+    // Initializes controls
     cursors = game.input.keyboard.createCursorKeys();
 
-    // Implement time limit (start off with 60 seconds for a round)
-    game.time.events.add(Phaser.Timer.SECOND*30, endGame, this);
+    // Initializes timers 
     timerText = game.add.text(600, 816, 'Time left: 60', {fontSize: '32px', fill: '#000'});
 
     gameStarted = true;
 }
+
+function initializeSound() {
+    //Initializes the sound effects
+    biteSFX = game.add.audio("bite");
+    biteSFX.addMarker("happy", 0, 0.69, 1, false);
+    biteSFX.addMarker("hit", 0.7, 0.69, 1, false);
+
+    bgm = game.add.audio("bgm");
+    bgm.play("", 0, 0.75, true, false);
+
+    forestAmbience1 = game.add.audio("forest");
+    forestAmbience1.play("", 0, 0.25, true, false);
+
+    rustleSFX = game.add.audio("rustle");
+    rustleSFX.play("", 0, 0.1, true, false);
+}
+
+function initializeTimeEvents() {
+    // Implement time limit (bananat off with 60 seconds for a round)
+    game.time.events.add(Phaser.Timer.SECOND * 60, endGame, this);
+    game.time.events.loop(Phaser.Timer.SECOND, generateBananas, this, bananas, 3);
+    game.time.events.loop(Phaser.Timer.SECOND * 3, generateRocks, this, rocks, 1);
+    game.time.events.loop(Phaser.Timer.SECOND * 5, generateBundles, this, coolBanana, 1);
+    game.time.events.loop(Phaser.Timer.SECOND, updateTimer, this);
+}
+    /*
+    Reduces timerCounter by 1.
+    */
+function updateTimer(){
+    timerCounter = Math.max(0,timerCounter - 1);
+}
+
 function endGame() {
     //stop sprites, do something with score
     gameEnded = true;
@@ -172,19 +231,20 @@ function switchMonkey() {
 
 function update() {
     if (gameStarted) {
-        //  Collide the player and the stars with the platforms
-        game.physics.arcade.collide(stars, platforms);
 
-        //Not working right now
+        collisionUpdate();
         cameraUpdate();
 
         if (!gameEnded) {
-            // Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-            game.physics.arcade.overlap(monkeyJumping, stars, collectStar, null, this);
+            // Checks to see if the player overlaps with any of the bananas, if he does call the collectbanana function
+            game.physics.arcade.overlap(monkeyJumping, bananas, collectbanana, null, this);
+            game.physics.arcade.overlap(monkeyJumping, rocks, hitByRock, null, this);
+            game.physics.arcade.overlap(monkeyJumping, coolBanana, collectbananaBundle, null, this);
 
             controls();
-            timerText.setText('Time left: ' + Math.ceil(game.time.events.duration/1000));
+            timerText.setText('Time left: ' + timerCounter);
         } else {
+            bgm.fadeOut(5000);
             monkeyJumping.animations.stop();
             monkeyJumping.body.velocity.x = 0;
             timerText.setText('Time left: 0');
@@ -193,49 +253,128 @@ function update() {
         }
     }
 }
-
-
     /*
-    Function: Generates a specified amount of banana sprites 
+    Generates a specified amount of banana sprites 
     @param: bananas: the group in which a banana will be added to
     @param: amountOfBananas: the amount of bananas being generated
     */
+
 function generateBananas(bananas, amountOfBananas) {
-    for (var i = 0; i < amountOfBananas; i++) {
-        //  Create a banana inside of the 'bananas' group
-        var banana = bananas.create(Math.random() * SCREEN_WIDTH - 26, Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'star');
+    if (gameEnded != true) {
+        for (var i = 0; i < amountOfBananas; i++) {
+            //console.log(i);
+            //  Create a banana inside of the 'bananas' group
+            var banana = bananas.create(Math.random() * (SCREEN_WIDTH-26), Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'banana');
 
-        game.physics.enable(banana);
-        //  Let gravity do its thing
-        banana.body.gravity.y = gravity;
-
-        //  This just gives each star a slightly random bounce value
-        banana.body.bounce.y = 0.7 + Math.random() * 0.2;
+            game.physics.enable(banana);
+            //  Let gravity do its thing
+            banana.body.gravity.y = gravity/5;
+        }
     }
 }
 
-function collectStar(monkey, star) {
-    
-    // Removes the star from the screen
-    star.kill();
+/*
+Generates a specified amount of banana bundle sprites 
+@param: bananas: the group in which a banana will be added to
+@param: amountOfBananas: the amount of bananas being generated
+*/
+
+function generateBundles(coolBanana, amountOfBananas) {
+    if (gameEnded != true) {
+        for (var i = 0; i < amountOfBananas; i++) {
+            //console.log(i);
+            //  Create a banana inside of the 'bananas' group
+            var banana = coolBanana.create(Math.random() * (SCREEN_WIDTH - 26), Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'bundle');
+
+            game.physics.enable(banana);
+            //  Let gravity do its thing
+            banana.body.gravity.y = gravity / 5;
+        }
+    }
+}
+    /*
+    Generates a specified amount of rock sprites 
+    @param: rocks: the group in which a rock will be added to
+    @param: amountOfRocks: the amount of rocks being generated
+    */
+
+function generateRocks(rocks, amountOfRocks) {
+    if (gameEnded != true) {
+        for (var i = 0; i < amountOfRocks; i++) {
+            //  Create a banana inside of the 'rocks' group
+            var rock = rocks.create(Math.random() * (SCREEN_WIDTH - 26), Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'rock');
+            game.physics.enable(rock);
+            //  Let gravity do its thing
+            rock.body.gravity.y = gravity/3;
+        }
+    }
+}
+
+    /*
+    Removes banana from the screen and adds 10 points to score.
+    @param: A monkey sprite
+    @param: A banana sprite
+    */
+function collectbanana(monkey, banana) {
+    // Removes the banana from the screen
+    banana.kill();
 
     //  Add and update the score
     score += 10;
     scoreText.setText('Score: ' + score);
+    biteSFX.play("happy", 0, 0.5, false, true);
+}
+/*
+Removes banana from the screen and adds 50 points to score.
+@param: A monkey sprite
+@param: A banana sprite
+*/
+function collectbananaBundle(monkey, banana) {
+    // Removes the banana from the screen
+    banana.kill();
 
-    //biteSFX.play("", 0, 0.5, false, true);
+    //  Add and update the score
+    score += 50;
+    scoreText.setText('Score: ' + score);
+
+    biteSFX.play("happy", 0, 0.5, false, true);
+}
+    /*
+    Removes rock from the screen
+    Deducts 50 points from score if crash drop isn't true.
+    Sets crash drop equal to true otherwise.
+    @param: A monkey sprite
+    @param: A rock sprite
+    */
+function hitByRock(monkey, rock) {
+    rock.kill();
+    if (!crashDrop) {
+        score = Math.max(0, score - 50);
+        scoreText.setText('Score: ' + score);
+
+        monkey.body.velocity.y = SCREEN_HEIGHT;
+        biteSFX.play("hit", 0, 0.5, false, true);
+
+        crashDrop = true;
+    }
 }
 
+    /*
+    Initalizes the monkey sprite, giving it a starting position and sprite sheet
+    @param: monkey, the sprite being initialized
+    @param: startingX, the initial x position 
+    @param: startingY, the initial y position
+    @param: game, the game
+    */
 function initializeMonkey(monkey, startingX, startingY, game) {
     // The player and its settings
     monkey = game.add.sprite(startingX, startingY, 'monkey', 4);
 
     game.physics.enable(monkey);
 
-    //  Player physics properties. Give the little guy a slight bounce.
-    monkey.body.bounce.y = 0;
-    monkey.body.gravity.y = gravity; //gravedad
-    monkey.body.collideWorldBounds = true; //choque con los bordes del juego
+    //  Player physics properties.
+    monkey.body.gravity.y = gravity; 
+    monkey.body.collideWorldBounds = true; 
 
     //  Our two animations, walking left and right.
     monkey.animations.add('left', [0, 1, 2, 3], 10, true);
@@ -244,12 +383,26 @@ function initializeMonkey(monkey, startingX, startingY, game) {
     return monkey;
 }
 
-function cameraUpdate() {
-    //Updates the camera
+    //Collide the player and the bananas with the platforms
+function collisionUpdate() {
+    game.physics.arcade.collide(bananas, platforms, removeSprite, null, this);
+    game.physics.arcade.collide(rocks, platforms, removeSprite, null, this);
+    game.physics.arcade.collide(coolBanana, platforms, removeSprite, null, this);
+    game.physics.arcade.collide(monkeyJumping, platforms, switchMonkey);
+    game.physics.arcade.collide(otherMonkey, platforms);
+}
+    //Updates the camera position, as well as score and timer text
+function cameraUpdate() {  
     game.camera.setPosition(0,
-        Math.min(monkeyJumping.body.y - game.camera.height / 2, SCREEN_HEIGHT));
+        Math.min(monkeyJumping.body.y - SCREEN_HEIGHT / 2, GAME_HEIGHT));
     scoreText.y = game.camera.y + 16;
     timerText.y = game.camera.y + 16;
+}
+
+    //Updates jump height
+function jumpSpeedUpdate() {
+    jumpSpeed = defaultJumpSpeed * (Math.max(1 / 2, landingDistance / GAME_WIDTH)) + Math.max(0,score-previousScore) * scoreToJumpRatio;
+    previousScore = score;
 }
 
 //Debug function to get coordinate of mouse
@@ -260,17 +413,16 @@ function mouseDebugger() {
 }
 
 /*
-Adjusts camera location
+Debug function, adjusts camera location
 @param: int adjustment, which adjusts camera location
 */
 function adjustCameraLocation(adjustment) {
-    CAMERA_LOCATION = Math.min(Math.max(0,CAMERA_LOCATION-adjustment),SCREEN_HEIGHT);
+    CAMERA_LOCATION = Math.min(Math.max(0,CAMERA_LOCATION-adjustment), SCREEN_HEIGHT);
     game.camera.setPosition(0, CAMERA_LOCATION);
 }
 
-/*
-Controls for camera movement
-*/
+
+//Debug function, controls for camera movement
 function cameraControls() {
     if (cursors.up.isDown) {
         adjustCameraLocation(CAMERA_ADJUSTMENT);
@@ -278,31 +430,55 @@ function cameraControls() {
         adjustCameraLocation(-1 * CAMERA_ADJUSTMENT);
     }
 }
-function controls() {
-    //  Reset the players velocity (movement)
-    monkeyJumping.body.velocity.x = 0;
-    
-    if (isJumping) {
-        if (cursors.left.isDown) 
-        {
-            //  Move to the left
-            monkeyJumping.body.velocity.x = -150;
-            monkeyJumping.animations.play('left');
-        }
-        else if (cursors.right.isDown) {
-            //  Move to the right
-            monkeyJumping.body.velocity.x = 150;
-            monkeyJumping.animations.play('right');
-        }
-        else {
-            //   Stand still
-            monkeyJumping.animations.stop();
-        }
 
-        game.physics.arcade.collide(monkeyJumping, platforms, switchMonkey);
-        game.physics.arcade.collide(otherMonkey, platforms);
+    /*
+    Kills sprite which collided with ground
+    @param: sprite being killed
+    @groun: none
+    */
+function removeSprite(sprite, ground) {
+    game.time.events.add(Phaser.Timer.SECOND/2, finishIt, this,sprite);
+    //sprite.kill();
+}
+function finishIt(sprite) {
+    sprite.kill()
+}
+    /*
+    Controls input for the monkey, allowing it to move left and right as well as perform a drop
+    */
+function controls() {
+    //  Reset the x velocity
+    monkeyJumping.body.velocity.x = 0;
+
+    if (isJumping) {
+        if (!crashDrop) {
+            if (cursors.left.isDown) 
+            {
+                //  Move to the left
+                monkeyJumping.body.velocity.x = -verticalSpeed;
+                monkeyJumping.animations.play('left');
+            }
+            else if (cursors.right.isDown) {
+                //  Move to the right
+                monkeyJumping.body.velocity.x = verticalSpeed;
+                monkeyJumping.animations.play('right');
+            }
+            else if (cursors.down.isDown && monkeyJumping.body.y < (GAME_HEIGHT-SCREEN_HEIGHT/2)) {
+                //  Move to the down
+                monkeyJumping.body.velocity.y = GAME_HEIGHT;
+                monkeyJumping.animations.stop();
+                crashDrop = true;
+            }
+            else {
+                //   Stand still
+                monkeyJumping.animations.stop();
+            }        
+        }
+        
     } else {
-        monkeyJumping.body.velocity.y = -(defaultJumpSpeed*landingDistance / GAME_WIDTH  + score * scoreToJumpRatio);
+        crashDrop = false;
+        jumpSpeedUpdate();
+        monkeyJumping.body.velocity.y = -jumpSpeed;
         isJumping = true;
     }
 
