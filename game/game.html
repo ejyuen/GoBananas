@@ -211,7 +211,6 @@ function generateRocks(rocks, amountOfRocks) {
         for (var i = 0; i < amountOfRocks; i++) {
             //  Create a banana inside of the 'rocks' group
             var rock = rocks.create(Math.random() * (SCREEN_WIDTH - 26), Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'rock');
-
             game.physics.enable(rock);
             //  Let gravity do its thing
             rock.body.gravity.y = gravity/3;
@@ -219,6 +218,12 @@ function generateRocks(rocks, amountOfRocks) {
     }
 }
 
+    /*
+    Removes banana from the screen and adds 10 points to score.
+    Plays a happy monkey sfx
+    @param: A monkey sprite
+    @param: A banana sprite
+    */
 function collectbanana(monkey, banana) {
     // Removes the banana from the screen
     banana.kill();
@@ -229,14 +234,20 @@ function collectbanana(monkey, banana) {
 
     biteSFX.play("happy", 0, 0.5, false, true);
 }
-
+    /*
+    Removes rock from the screen and deducts 10 points from score.
+    Plays a hit monkey sfx
+    Sends monkey crashing down as well.
+    @param: A monkey sprite
+    @param: A rock sprite
+    */
 function hitByRock(monkey, rock) {
     rock.kill();
 
     score = Math.max(0, score - 50);
     scoreText.setText('Score: ' + score);
     
-    monkey.body.velocity.y = 500;
+    monkey.body.velocity.y = SCREEN_HEIGHT;
     biteSFX.play("hit", 0, 0.5, false, true);
 }
 
