@@ -34,6 +34,7 @@ function preload() {
     game.load.image('banana', 'assets/img/banana.png');
     game.load.image('sky', 'assets/sky.png');
     game.load.image('jungle', 'assets/img/jungle.png');
+    game.load.image("rock", "assets/img/rock.png");
 
     game.load.audio('bite', 'assets/audio/bite.mp3');
 
@@ -44,6 +45,7 @@ var platforms;
 var cursors;
 
 var bananas;
+var rocks;
 var score = 0;
 var previousScore = 0;
 var scoreText;
@@ -109,12 +111,14 @@ function create() {
 
     //  Finally some bananas to collect
     bananas = game.add.group();
+    rocks = game.add.group();
 
     generateBananas(bananas, 24);
 
     // The sounds
     biteSFX = game.add.audio("bite");
     biteSFX.addMarker("happy", 0, 0.69, 1, false);
+    biteSFX.addMarker("hit", 0.7, 0.69, 1, false);
     //  The score
     scoreText = game.add.text(16, game.camera.y + 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
@@ -124,6 +128,7 @@ function create() {
     // Implement time limit (bananat off with 60 seconds for a round)
     game.time.events.add(Phaser.Timer.SECOND * 60, endGame, this);
     game.time.events.loop(Phaser.Timer.SECOND, generateBananas, this, bananas, 3);
+    game.time.events.loop(Phaser.Timer.SECOND*3, generateRocks, this, rocks, 1);
     game.time.events.loop(Phaser.Timer.SECOND, updateTimer, this);
 
     timerText = game.add.text(600, 816, 'Time left: 60', {fontSize: '32px', fill: '#000'});
@@ -164,7 +169,7 @@ function update() {
     if (!gameEnded) {
         // Checks to see if the player overlaps with any of the bananas, if he does call the collectbanana function
         game.physics.arcade.overlap(monkeyJumping, bananas, collectbanana, null, this);
-
+        game.physics.arcade.overlap(monkeyJumping, rocks, hitByRock, null, this);
         controls();
         timerText.setText('Time left: ' + timerCounter);
     } else {
@@ -191,9 +196,25 @@ function generateBananas(bananas, amountOfBananas) {
             game.physics.enable(banana);
             //  Let gravity do its thing
             banana.body.gravity.y = gravity/5;
+        }
+    }
+}
 
-            //  This just gives each banana a slightly random bounce value
-            banana.body.bounce.y = 0.7 + Math.random() * 0.2;
+/*
+Function: Generates a specified amount of rock sprites 
+@param: rocks: the group in which a rock will be added to
+@param: amountOfRocks: the amount of rocks being generated
+*/
+
+function generateRocks(rocks, amountOfRocks) {
+    if (gameEnded != true) {
+        for (var i = 0; i < amountOfRocks; i++) {
+            //  Create a banana inside of the 'rocks' group
+            var rock = rocks.create(Math.random() * (SCREEN_WIDTH - 26), Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'rock');
+
+            game.physics.enable(rock);
+            //  Let gravity do its thing
+            rock.body.gravity.y = gravity/3;
         }
     }
 }
@@ -207,6 +228,16 @@ function collectbanana(monkey, banana) {
     scoreText.setText('Score: ' + score);
 
     biteSFX.play("happy", 0, 0.5, false, true);
+}
+
+function hitByRock(monkey, rock) {
+    rock.kill();
+
+    score = Math.max(0, score - 50);
+    scoreText.setText('Score: ' + score);
+    
+    monkey.body.velocity.y = 500;
+    biteSFX.play("hit", 0, 0.5, false, true);
 }
 
 function initializeMonkey(monkey, bananatingX, bananatingY, game) {
@@ -229,7 +260,8 @@ function initializeMonkey(monkey, bananatingX, bananatingY, game) {
 
     //Collide the player and the bananas with the platforms
 function collisionUpdate() {
-    game.physics.arcade.collide(bananas, platforms, removeBanana, null, this);
+    game.physics.arcade.collide(bananas, platforms, removeSprite, null, this);
+    game.physics.arcade.collide(rocks, platforms, removeSprite, null, this);
     game.physics.arcade.collide(monkeyJumping, platforms, switchMonkey);
     game.physics.arcade.collide(otherMonkey, platforms);
 }
@@ -274,8 +306,8 @@ function cameraControls() {
 }
 
 
-function removeBanana(banana, ground) {
-    banana.kill();
+function removeSprite(sprite, ground) {
+    sprite.kill();
 }
 
 function controls() {
