@@ -31,7 +31,7 @@ function preload() {
     game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', MONKEY_WIDTH, MONKEY_HEIGHT);
     game.load.image("bed", "assets/img/bed.png");
     game.load.image('ground', 'assets/platform.png');
-    game.load.image('star', 'assets/img/banana.png');
+    game.load.image('banana', 'assets/img/banana.png');
     game.load.image('sky', 'assets/sky.png');
     game.load.image('jungle', 'assets/img/jungle.png');
 
@@ -43,8 +43,9 @@ var player;
 var platforms;
 var cursors;
 
-var stars;
+var bananas;
 var score = 0;
+var previousScore = 0;
 var scoreText;
 
 //Holds the two monkeys
@@ -103,10 +104,10 @@ function create() {
     monkeyJumping = monkeyOne;
     otherMonkey = monkeyTwo;
 
-    //  Finally some stars to collect
-    stars = game.add.group();
+    //  Finally some bananas to collect
+    bananas = game.add.group();
 
-    generateBananas(stars, 24);
+    generateBananas(bananas, 24);
 
     // The sounds
     biteSFX = game.add.audio("bite");
@@ -119,9 +120,9 @@ function create() {
 
     cursors = game.input.keyboard.createCursorKeys();
 
-    // Implement time limit (start off with 60 seconds for a round)
+    // Implement time limit (bananat off with 60 seconds for a round)
     game.time.events.add(Phaser.Timer.SECOND * 60, endGame, this);
-    game.time.events.loop(Phaser.Timer.SECOND, generateBananas, this, stars, 2);
+    game.time.events.loop(Phaser.Timer.SECOND, generateBananas, this, bananas, 2);
     game.time.events.loop(Phaser.Timer.SECOND, updateTimer, this);
 
     timerText = game.add.text(600, 816, 'Time left: 60', {fontSize: '32px', fill: '#000'});
@@ -160,8 +161,8 @@ function update() {
     cameraUpdate();
 
     if (!gameEnded) {
-        // Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-        game.physics.arcade.overlap(monkeyJumping, stars, collectStar, null, this);
+        // Checks to see if the player overlaps with any of the bananas, if he does call the collectbanana function
+        game.physics.arcade.overlap(monkeyJumping, bananas, collectbanana, null, this);
 
         controls();
         timerText.setText('Time left: ' + timerCounter);
@@ -184,21 +185,21 @@ function generateBananas(bananas, amountOfBananas) {
         for (var i = 0; i < amountOfBananas; i++) {
             //console.log(i);
             //  Create a banana inside of the 'bananas' group
-            var banana = bananas.create(Math.random() * (SCREEN_WIDTH-26) + 26, Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'star');
+            var banana = bananas.create(Math.random() * (SCREEN_WIDTH-26) + 26, Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'banana');
 
             game.physics.enable(banana);
             //  Let gravity do its thing
             banana.body.gravity.y = gravity/5;
 
-            //  This just gives each star a slightly random bounce value
+            //  This just gives each banana a slightly random bounce value
             banana.body.bounce.y = 0.7 + Math.random() * 0.2;
         }
     }
 }
 
-function collectStar(monkey, star) {
-    // Removes the star from the screen
-    star.kill();
+function collectbanana(monkey, banana) {
+    // Removes the banana from the screen
+    banana.kill();
 
     //  Add and update the score
     score += 10;
@@ -207,9 +208,9 @@ function collectStar(monkey, star) {
     biteSFX.play("happy", 0, 0.5, false, true);
 }
 
-function initializeMonkey(monkey, startingX, startingY, game) {
+function initializeMonkey(monkey, bananatingX, bananatingY, game) {
     // The player and its settings
-    monkey = game.add.sprite(startingX, startingY, 'monkey', 4);
+    monkey = game.add.sprite(bananatingX, bananatingY, 'monkey', 4);
 
     game.physics.enable(monkey);
 
@@ -225,9 +226,9 @@ function initializeMonkey(monkey, startingX, startingY, game) {
     return monkey;
 }
 
-    //Collide the player and the stars with the platforms
+    //Collide the player and the bananas with the platforms
 function collisionUpdate() {
-    game.physics.arcade.collide(stars, platforms, removeBanana, null, this);
+    game.physics.arcade.collide(bananas, platforms, removeBanana, null, this);
     game.physics.arcade.collide(monkeyJumping, platforms, switchMonkey);
     game.physics.arcade.collide(otherMonkey, platforms);
 }
