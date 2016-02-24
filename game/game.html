@@ -102,6 +102,7 @@ var creditsText;
 var startButton;
 
 var gameOverImg;
+var endTitle = false;
 
 function create() {
     initializeWorld();
@@ -196,7 +197,7 @@ function initializeSound() {
 
 function initializeTimeEvents() {
     // Implement time limit (bananat off with 60 seconds for a round)
-    game.time.events.add(Phaser.Timer.SECOND * 60, endGame, this);
+    game.time.events.add(Phaser.Timer.SECOND * 5, endGame, this);
     game.time.events.loop(Phaser.Timer.SECOND, generateBananas, this, bananas, 3);
     game.time.events.loop(Phaser.Timer.SECOND * 3, generateRocks, this, rocks, 1);
     game.time.events.loop(Phaser.Timer.SECOND * 5, generateBundles, this, coolBanana, 1);
@@ -235,6 +236,10 @@ function switchMonkey() {
 function update() {
     if (gameStarted) {
 
+        if (gameEnded && !endTitle) {
+            gameOverImg = game.add.sprite(GAME_WIDTH/2-320, 1500, 'gameOver');
+            endTitle = true;
+        }
         collisionUpdate();
         cameraUpdate();
 
@@ -248,7 +253,6 @@ function update() {
             timerText.setText('Time left: ' + timerCounter);
         } else {
             bgm.fadeOut(5000);
-            gameOverImg = game.add.sprite(GAME_WIDTH/2-100, 1500, 'gameOver');
             monkeyJumping.animations.stop();
             monkeyJumping.body.velocity.x = 0;
             timerText.setText('Time left: 0');
