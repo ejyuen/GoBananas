@@ -37,7 +37,9 @@ function preload() {
     game.load.image("rock", "assets/img/rock.png");
 
     game.load.audio('bite', 'assets/audio/bite.mp3');
-
+    game.load.audio("bgm", "assets/audio/forestBGM.mp3");
+    game.load.audio("forest", "assets/audio/forest_ambience.mp3");
+    game.load.audio("rustle", "assets/audio/bush_rustle.wav");
 }
 
 var player;
@@ -72,7 +74,9 @@ var platforms;
 
 //Sounds
 var biteSFX;
-
+var bgm;
+var forestAmbience1;
+var rustleSFX;
 //Timer variables
 var gameEnded = false;
 var bananaTimer;
@@ -80,14 +84,40 @@ var timerCounter = 60;
 var timerText;
 
 
+
 function create() {
 
+    initializeWorld();
+
+    // The player and its settings
+    monkeyOne = initializeMonkey(monkeyOne, 0, SCREEN_HEIGHT + MONKEY_HEIGHT, game);
+    monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH - MONKEY_WIDTH, GAME_HEIGHT - GROUND_HEIGHT -MONKEY_HEIGHT, game);
+    monkeyJumping = monkeyOne;
+    otherMonkey = monkeyTwo;
+
+    //  Finally some bananas to collect
+    bananas = game.add.group();
+    rocks = game.add.group();
+
+    generateBananas(bananas, 24);
+
+    initializeSound();
+    initializeTimeEvents();
+    //  The score
+    scoreText = game.add.text(16, game.camera.y + 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
+
+    //  Our controls.
+    cursors = game.input.keyboard.createCursorKeys();
+
+    timerText = game.add.text(600, 816, 'Time left: 60', {fontSize: '32px', fill: '#000'});
+}
+
+function initializeWorld() {
     //Sets the bound of the world
     game.world.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
     //Camera
     game.camera.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-    //adjustCameraLocation(0);
     game.camera.setPosition(0, CAMERA_LOCATION);
 
 
@@ -102,38 +132,28 @@ function create() {
     bed.scale.setTo(2, 2);
     game.physics.enable(bed);
     bed.body.immovable = true;
+}
 
-    // The player and its settings
-    monkeyOne = initializeMonkey(monkeyOne, 0, SCREEN_HEIGHT + MONKEY_HEIGHT, game);
-    monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH - MONKEY_WIDTH, GAME_HEIGHT - GROUND_HEIGHT -MONKEY_HEIGHT, game);
-    monkeyJumping = monkeyOne;
-    otherMonkey = monkeyTwo;
-
-    //  Finally some bananas to collect
-    bananas = game.add.group();
-    rocks = game.add.group();
-
-    generateBananas(bananas, 24);
-
+function initializeSound() {
     // The sounds
     biteSFX = game.add.audio("bite");
     biteSFX.addMarker("happy", 0, 0.69, 1, false);
     biteSFX.addMarker("hit", 0.7, 0.69, 1, false);
-    //  The score
-    scoreText = game.add.text(16, game.camera.y + 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
+    bgm = game.add.audio("bgm");
+    bgm.play("", 0, 0.75, true, false);
+    forestAmbience1 = game.add.audio("forest");
+    forestAmbience1.play("", 0, 0.25, true, false);
+    rustleSFX = game.add.audio("rustle");
+    rustleSFX.play("", 0, 0.1, true, false);
+}
 
-    //  Our controls.
-    cursors = game.input.keyboard.createCursorKeys();
-
+function initializeTimeEvents() {
     // Implement time limit (bananat off with 60 seconds for a round)
     game.time.events.add(Phaser.Timer.SECOND * 60, endGame, this);
     game.time.events.loop(Phaser.Timer.SECOND, generateBananas, this, bananas, 3);
-    game.time.events.loop(Phaser.Timer.SECOND*3, generateRocks, this, rocks, 1);
+    game.time.events.loop(Phaser.Timer.SECOND * 3, generateRocks, this, rocks, 1);
     game.time.events.loop(Phaser.Timer.SECOND, updateTimer, this);
-
-    timerText = game.add.text(600, 816, 'Time left: 60', {fontSize: '32px', fill: '#000'});
 }
-
 function updateTimer(){
     timerCounter = Math.max(0,timerCounter - 1);
 }
@@ -170,9 +190,11 @@ function update() {
         // Checks to see if the player overlaps with any of the bananas, if he does call the collectbanana function
         game.physics.arcade.overlap(monkeyJumping, bananas, collectbanana, null, this);
         game.physics.arcade.overlap(monkeyJumping, rocks, hitByRock, null, this);
+        
         controls();
         timerText.setText('Time left: ' + timerCounter);
     } else {
+        bgm.fadeOut(5000);
         monkeyJumping.animations.stop();
         monkeyJumping.body.velocity.x = 0;
         timerText.setText('Time left: 0');
@@ -235,20 +257,24 @@ function collectbanana(monkey, banana) {
     biteSFX.play("happy", 0, 0.5, false, true);
 }
     /*
-    Removes rock from the screen and deducts 10 points from score.
-    Plays a hit monkey sfx
-    Sends monkey crashing down as well.
+    Removes rock from the screen
+    Deducts 50 points from score if crash drop isn't true.
+    Sets crash drop equal to true otherwise.
     @param: A monkey sprite
     @param: A rock sprite
     */
 function hitByRock(monkey, rock) {
     rock.kill();
+    if (!crashDrop) {
+        score = Math.max(0, score - 50);
+        scoreText.setText('Score: ' + score);
 
-    score = Math.max(0, score - 50);
-    scoreText.setText('Score: ' + score);
+        monkey.body.velocity.y = SCREEN_HEIGHT;
+        biteSFX.play("hit", 0, 0.5, false, true);
+
+        crashDrop = true;
+    }
     
-    monkey.body.velocity.y = SCREEN_HEIGHT;
-    biteSFX.play("hit", 0, 0.5, false, true);
 }
 
 function initializeMonkey(monkey, bananatingX, bananatingY, game) {
@@ -338,7 +364,7 @@ function controls() {
                 monkeyJumping.body.velocity.x = 150;
                 monkeyJumping.animations.play('right');
             }
-            else if (cursors.down.isDown) {
+            else if (cursors.down.isDown && monkeyJumping.body.y < (GAME_HEIGHT-SCREEN_HEIGHT/2)) {
                 //  Move to the down
                 monkeyJumping.body.velocity.y = 1000;
                 monkeyJumping.animations.stop();
