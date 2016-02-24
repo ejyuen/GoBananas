@@ -41,8 +41,9 @@ function preload() {
     game.load.image('jungle', 'assets/img/jungle.png');
     game.load.image("rock", "assets/img/rock.png");
     game.load.image("transition", "assets/img/transition.png");
-    game.load.image('button', "assets/img/button.png");
-    game.load.image('title', "assets/img/title.png");
+    game.load.image('button', "assets/img/start.png");
+    game.load.image('title', "assets/img/logo.png");
+    game.load.image('gameOver', "assets/img/end.png")
 
     game.load.audio('bite', 'assets/audio/bite.mp3');
     game.load.audio("bgm", "assets/audio/forestBGM.mp3");
@@ -100,6 +101,8 @@ var monkeyStartTwo;
 var creditsText;
 var startButton;
 
+var gameOverImg;
+
 function create() {
     initializeWorld();
 
@@ -110,7 +113,7 @@ function create() {
     titleLogo = game.add.sprite(100, 1250, 'title');
     creditsText = game.add.text(GAME_WIDTH/2-65, 1600, "Kevin Escobar\nDeanna Hambleton\nErica Yuen", {fontSize: '16px', fill: '000', align: 'center'});
     // add button
-    startButton = game.add.button(390, 1500, 'button', buttonCallback, this);
+    startButton = game.add.button(GAME_WIDTH/2-105, 1500, 'button', buttonCallback, this);
 }
 
 function initializeWorld() {
@@ -139,7 +142,7 @@ function buttonCallback() {
     // clear monkeys, text, button
     monkeyStartOne.kill();
     monkeyStartTwo.kill();
-    titleText.kill();
+    titleLogo.kill();
     creditsText.kill();
     startButton.kill();
     createGame();
@@ -245,6 +248,7 @@ function update() {
             timerText.setText('Time left: ' + timerCounter);
         } else {
             bgm.fadeOut(5000);
+            gameOverImg = game.add.sprite(GAME_WIDTH/2-100, 1500, 'gameOver');
             monkeyJumping.animations.stop();
             monkeyJumping.body.velocity.x = 0;
             timerText.setText('Time left: 0');
@@ -397,6 +401,10 @@ function cameraUpdate() {
         Math.min(monkeyJumping.body.y - SCREEN_HEIGHT / 2, GAME_HEIGHT));
     scoreText.y = game.camera.y + 16;
     timerText.y = game.camera.y + 16;
+    if (gameEnded) {
+        gameOverImg.y = game.camera.y + 100;
+    }
+
 }
 
     //Updates jump height
