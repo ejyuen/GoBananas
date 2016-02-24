@@ -94,7 +94,7 @@ var timerCounter = 60;
 var timerText;
 
 var gameStarted = false;
-var titleText;
+var titleLogo;
 var monkeyStartOne;
 var monkeyStartTwo;
 var creditsText;
@@ -107,7 +107,7 @@ function create() {
     monkeyStartTwo = game.add.sprite(700, GAME_HEIGHT-GROUND_HEIGHT-MONKEY_HEIGHT, 'monkey', 4);
 
     // add text for title
-    titleText = game.add.text(100, 1250, "Go Bananas!", {fontSize: '100px', fill: '#fff', fontFamily: 'Trebuchet MS'});
+    titleLogo = game.add.sprite(100, 1250, 'title');
     creditsText = game.add.text(GAME_WIDTH/2-65, 1600, "Kevin Escobar\nDeanna Hambleton\nErica Yuen", {fontSize: '16px', fill: '000', align: 'center'});
     // add button
     startButton = game.add.button(390, 1500, 'button', buttonCallback, this);
