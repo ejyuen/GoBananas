@@ -35,7 +35,7 @@ function preload() {
     game.load.image("bed", "assets/img/bed.png");
     game.load.image('ground', 'assets/platform.png');
     game.load.image('banana', 'assets/img/banana.png');
-    game.load.image("bundle","assets/img/bananaBundle.png")
+    game.load.image("bundle","assets/img/coolBanana.png")
     game.load.image('sky', 'assets/sky.png');
     game.load.image('jungle', 'assets/img/jungle.png');
     game.load.image("rock", "assets/img/rock.png");
@@ -51,7 +51,7 @@ var platforms;
 var cursors;
 
 var bananas;
-var bananaBundles;
+var coolBanana;
 var rocks;
 var score = 0;
 var previousScore = 0;
@@ -102,7 +102,7 @@ function create() {
     // Creates banana and rock groups
     bananas = game.add.group();
     rocks = game.add.group();
-    bananaBundles = game.add.group();
+    coolBanana = game.add.group();
 
     // Creates intial banana amount
     generateBananas(bananas, 24);
@@ -163,7 +163,7 @@ function initializeTimeEvents() {
     game.time.events.add(Phaser.Timer.SECOND * 60, endGame, this);
     game.time.events.loop(Phaser.Timer.SECOND, generateBananas, this, bananas, 3);
     game.time.events.loop(Phaser.Timer.SECOND * 3, generateRocks, this, rocks, 1);
-    game.time.events.loop(Phaser.Timer.SECOND * 5, generateBundles, this, bananaBundles, 1);
+    game.time.events.loop(Phaser.Timer.SECOND * 5, generateBundles, this, coolBanana, 1);
     game.time.events.loop(Phaser.Timer.SECOND, updateTimer, this);
 }
     /*
@@ -205,7 +205,7 @@ function update() {
         // Checks to see if the player overlaps with any of the bananas, if he does call the collectbanana function
         game.physics.arcade.overlap(monkeyJumping, bananas, collectbanana, null, this);
         game.physics.arcade.overlap(monkeyJumping, rocks, hitByRock, null, this);
-        game.physics.arcade.overlap(monkeyJumping, bananaBundles, collectbananaBundle, null, this);
+        game.physics.arcade.overlap(monkeyJumping, coolBanana, collectbananaBundle, null, this);
 
         controls();
         timerText.setText('Time left: ' + timerCounter);
@@ -244,12 +244,12 @@ Generates a specified amount of banana bundle sprites
 @param: amountOfBananas: the amount of bananas being generated
 */
 
-function generateBundles(bananaBundles, amountOfBananas) {
+function generateBundles(coolBanana, amountOfBananas) {
     if (gameEnded != true) {
         for (var i = 0; i < amountOfBananas; i++) {
             //console.log(i);
             //  Create a banana inside of the 'bananas' group
-            var banana = bananaBundles.create(Math.random() * (SCREEN_WIDTH - 26), Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'bundle');
+            var banana = coolBanana.create(Math.random() * (SCREEN_WIDTH - 26), Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'bundle');
 
             game.physics.enable(banana);
             //  Let gravity do its thing
@@ -353,7 +353,7 @@ function initializeMonkey(monkey, startingX, startingY, game) {
 function collisionUpdate() {
     game.physics.arcade.collide(bananas, platforms, removeSprite, null, this);
     game.physics.arcade.collide(rocks, platforms, removeSprite, null, this);
-    game.physics.arcade.collide(bananaBundles, platforms, removeSprite, null, this);
+    game.physics.arcade.collide(coolBanana, platforms, removeSprite, null, this);
     game.physics.arcade.collide(monkeyJumping, platforms, switchMonkey);
     game.physics.arcade.collide(otherMonkey, platforms);
 }
