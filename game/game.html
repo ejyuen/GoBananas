@@ -56,11 +56,13 @@ var monkeyJumping;
 var otherMonkey;
 //Checks if monkey is in the air
 var isJumping = true;
+var crashDrop = false;
 
 var landingDistance = 0;
 var jumpSpeed = 0;
 var defaultJumpSpeed = SCREEN_HEIGHT;
-var scoreToJumpRatio = GAME_HEIGHT/SCREEN_HEIGHT;
+var scoreToJumpRatio = GAME_HEIGHT / SCREEN_HEIGHT;
+
 
 //Gravity
 var gravity = 200;
@@ -121,7 +123,7 @@ function create() {
 
     // Implement time limit (bananat off with 60 seconds for a round)
     game.time.events.add(Phaser.Timer.SECOND * 60, endGame, this);
-    game.time.events.loop(Phaser.Timer.SECOND, generateBananas, this, bananas, 2);
+    game.time.events.loop(Phaser.Timer.SECOND, generateBananas, this, bananas, 3);
     game.time.events.loop(Phaser.Timer.SECOND, updateTimer, this);
 
     timerText = game.add.text(600, 816, 'Time left: 60', {fontSize: '32px', fill: '#000'});
@@ -184,7 +186,7 @@ function generateBananas(bananas, amountOfBananas) {
         for (var i = 0; i < amountOfBananas; i++) {
             //console.log(i);
             //  Create a banana inside of the 'bananas' group
-            var banana = bananas.create(Math.random() * (SCREEN_WIDTH-26) + 26, Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'banana');
+            var banana = bananas.create(Math.random() * (SCREEN_WIDTH-26), Math.random() * GAME_HEIGHT - SCREEN_HEIGHT, 'banana');
 
             game.physics.enable(banana);
             //  Let gravity do its thing
@@ -234,7 +236,7 @@ function collisionUpdate() {
     //Updates the camera position, as well as score and timer text
 function cameraUpdate() {  
     game.camera.setPosition(0,
-        Math.max(monkeyJumping.body.y - SCREEN_HEIGHT / 2, SCREEN_HEIGHT));
+        Math.min(monkeyJumping.body.y - SCREEN_HEIGHT / 2, GAME_HEIGHT));
     scoreText.y = game.camera.y + 16;
     timerText.y = game.camera.y + 16;
 }
@@ -281,22 +283,32 @@ function controls() {
     //  Reset the players velocity (movement)
     monkeyJumping.body.velocity.x = 0;
     if (isJumping) {
-        if (cursors.left.isDown) 
-        {
-            //  Move to the left
-            monkeyJumping.body.velocity.x = -150;
-            monkeyJumping.animations.play('left');
+        if (!crashDrop) {
+            if (cursors.left.isDown) 
+            {
+                //  Move to the left
+                monkeyJumping.body.velocity.x = -150;
+                monkeyJumping.animations.play('left');
+            }
+            else if (cursors.right.isDown) {
+                //  Move to the right
+                monkeyJumping.body.velocity.x = 150;
+                monkeyJumping.animations.play('right');
+            }
+            else if (cursors.down.isDown) {
+                //  Move to the down
+                monkeyJumping.body.velocity.y = 1000;
+                monkeyJumping.animations.stop();
+                crashDrop = true;
+            }
+            else {
+                //   Stand still
+                monkeyJumping.animations.stop();
+            }        
         }
-        else if (cursors.right.isDown) {
-            //  Move to the right
-            monkeyJumping.body.velocity.x = 150;
-            monkeyJumping.animations.play('right');
-        }
-        else {
-            //   Stand still
-            monkeyJumping.animations.stop();
-        }        
+        
     } else {
+        crashDrop = false;
         jumpSpeedUpdate();
         monkeyJumping.body.velocity.y = -jumpSpeed;
         isJumping = true;
