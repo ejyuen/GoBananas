@@ -21,7 +21,7 @@ var GAME_WIDTH = 800;
 var GAME_HEIGHT = SCREEN_HEIGHT * 3;
 
 //Camera variables
-var CAMERA_LOCATION = SCREEN_HEIGHT;
+var CAMERA_LOCATION = GAME_HEIGHT-SCREEN_HEIGHT;
 var CAMERA_ADJUSTMENT = 10;
 
 //image varables
@@ -92,8 +92,8 @@ function create() {
     initializeWorld();
 
     // Initializes the monkeys
-    monkeyOne = initializeMonkey(monkeyOne, 0, SCREEN_HEIGHT + MONKEY_HEIGHT, game);
-    monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH - MONKEY_WIDTH, GAME_HEIGHT - GROUND_HEIGHT -MONKEY_HEIGHT, game);
+    monkeyOne = initializeMonkey(monkeyOne, GAME_WIDTH/2 - MONKEY_WIDTH, GAME_HEIGHT - GROUND_HEIGHT - MONKEY_HEIGHT, game);
+    monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH/2 + MONKEY_WIDTH, GAME_HEIGHT - GROUND_HEIGHT - MONKEY_HEIGHT, game);
     monkeyJumping = monkeyOne;
     otherMonkey = monkeyTwo;
 
