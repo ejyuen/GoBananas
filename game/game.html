@@ -197,7 +197,7 @@ function initializeSound() {
 
 function initializeTimeEvents() {
     // Implement time limit (bananat off with 60 seconds for a round)
-    game.time.events.add(Phaser.Timer.SECOND * 5, endGame, this);
+    game.time.events.add(Phaser.Timer.SECOND * 60, endGame, this);
     game.time.events.loop(Phaser.Timer.SECOND, generateBananas, this, bananas, 3);
     game.time.events.loop(Phaser.Timer.SECOND * 3, generateRocks, this, rocks, 1);
     game.time.events.loop(Phaser.Timer.SECOND * 5, generateBundles, this, coolBanana, 1);
