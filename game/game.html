@@ -70,6 +70,7 @@ var landingDistance = 0;
 var jumpSpeed = 0;
 var defaultJumpSpeed = SCREEN_HEIGHT;
 var scoreToJumpRatio = GAME_HEIGHT / SCREEN_HEIGHT;
+var verticalSpeed = 150;
 
 //Gravity
 var gravity = 200;
@@ -376,17 +377,17 @@ function controls() {
             if (cursors.left.isDown) 
             {
                 //  Move to the left
-                monkeyJumping.body.velocity.x = -150;
+                monkeyJumping.body.velocity.x = -verticalSpeed;
                 monkeyJumping.animations.play('left');
             }
             else if (cursors.right.isDown) {
                 //  Move to the right
-                monkeyJumping.body.velocity.x = 150;
+                monkeyJumping.body.velocity.x = verticalSpeed;
                 monkeyJumping.animations.play('right');
             }
             else if (cursors.down.isDown && monkeyJumping.body.y < (GAME_HEIGHT-SCREEN_HEIGHT/2)) {
                 //  Move to the down
-                monkeyJumping.body.velocity.y = 1000;
+                monkeyJumping.body.velocity.y = GAME_HEIGHT;
                 monkeyJumping.animations.stop();
                 crashDrop = true;
             }
