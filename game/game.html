@@ -14,18 +14,21 @@
 
 <script type="text/javascript">
 
+//Game dimension variables
 var SCREEN_WIDTH = 800;
 var SCREEN_HEIGHT = 600
 var GAME_WIDTH = 800;
-var GAME_HEIGHT = SCREEN_HEIGHT*3;
+var GAME_HEIGHT = SCREEN_HEIGHT * 3;
+
+//Camera variables
 var CAMERA_LOCATION = SCREEN_HEIGHT;
 var CAMERA_ADJUSTMENT = 10;
 
+//image varables
 var MONKEY_WIDTH = 80;
 var MONKEY_HEIGHT = 69;
 var GROUND_HEIGHT = 64;
 var game = new Phaser.Game(SCREEN_WIDTH, SCREEN_HEIGHT, Phaser.AUTO, '', { preload: preload, create: create, update: update });
-var bananaTimer;
 function preload() {
 
     game.load.spritesheet('monkey', 'assets/img/monkey_sprites.png', MONKEY_WIDTH, MONKEY_HEIGHT);
@@ -52,21 +55,21 @@ var score = 0;
 var previousScore = 0;
 var scoreText;
 
-//Holds the two monkeys
+//Monkey variables
 var monkeyOne;
 var monkeyTwo;
-//Points to the monkey currently in the air
 var monkeyJumping;
 var otherMonkey;
-//Checks if monkey is in the air
+
+//Variables relating to monkey's states
 var isJumping = true;
 var crashDrop = false;
 
+//Parameters for monkey movement
 var landingDistance = 0;
 var jumpSpeed = 0;
 var defaultJumpSpeed = SCREEN_HEIGHT;
 var scoreToJumpRatio = GAME_HEIGHT / SCREEN_HEIGHT;
-
 
 //Gravity
 var gravity = 200;
@@ -77,38 +80,39 @@ var biteSFX;
 var bgm;
 var forestAmbience1;
 var rustleSFX;
+
 //Timer variables
 var gameEnded = false;
-var bananaTimer;
 var timerCounter = 60;
 var timerText;
-
-
 
 function create() {
 
     initializeWorld();
 
-    // The player and its settings
+    // Initializes the monkeys
     monkeyOne = initializeMonkey(monkeyOne, 0, SCREEN_HEIGHT + MONKEY_HEIGHT, game);
     monkeyTwo = initializeMonkey(monkeyTwo, GAME_WIDTH - MONKEY_WIDTH, GAME_HEIGHT - GROUND_HEIGHT -MONKEY_HEIGHT, game);
     monkeyJumping = monkeyOne;
     otherMonkey = monkeyTwo;
 
-    //  Finally some bananas to collect
+    // Creates banana and rock groups
     bananas = game.add.group();
     rocks = game.add.group();
 
+    // Creates intial banana amount
     generateBananas(bananas, 24);
+
 
     initializeSound();
     initializeTimeEvents();
-    //  The score
+    // Initializes score
     scoreText = game.add.text(16, game.camera.y + 16, 'Score: 0', { fontSize: '32px', fill: '#000' });
 
-    //  Our controls.
+    // Initializes controls
     cursors = game.input.keyboard.createCursorKeys();
 
+    // Initializes timers 
     timerText = game.add.text(600, 816, 'Time left: 60', {fontSize: '32px', fill: '#000'});
 }
 
@@ -116,7 +120,7 @@ function initializeWorld() {
     //Sets the bound of the world
     game.world.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    //Camera
+    //Sets the starting camera size and settings
     game.camera.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
     game.camera.setPosition(0, CAMERA_LOCATION);
 
@@ -135,14 +139,17 @@ function initializeWorld() {
 }
 
 function initializeSound() {
-    // The sounds
+    //Initializes the sound effects
     biteSFX = game.add.audio("bite");
     biteSFX.addMarker("happy", 0, 0.69, 1, false);
     biteSFX.addMarker("hit", 0.7, 0.69, 1, false);
+
     bgm = game.add.audio("bgm");
     bgm.play("", 0, 0.75, true, false);
+
     forestAmbience1 = game.add.audio("forest");
     forestAmbience1.play("", 0, 0.25, true, false);
+
     rustleSFX = game.add.audio("rustle");
     rustleSFX.play("", 0, 0.1, true, false);
 }
@@ -154,6 +161,9 @@ function initializeTimeEvents() {
     game.time.events.loop(Phaser.Timer.SECOND * 3, generateRocks, this, rocks, 1);
     game.time.events.loop(Phaser.Timer.SECOND, updateTimer, this);
 }
+    /*
+    Reduces timerCounter by 1.
+    */
 function updateTimer(){
     timerCounter = Math.max(0,timerCounter - 1);
 }
@@ -203,7 +213,7 @@ function update() {
     }
 }
     /*
-    Function: Generates a specified amount of banana sprites 
+    Generates a specified amount of banana sprites 
     @param: bananas: the group in which a banana will be added to
     @param: amountOfBananas: the amount of bananas being generated
     */
@@ -222,11 +232,11 @@ function generateBananas(bananas, amountOfBananas) {
     }
 }
 
-/*
-Function: Generates a specified amount of rock sprites 
-@param: rocks: the group in which a rock will be added to
-@param: amountOfRocks: the amount of rocks being generated
-*/
+    /*
+    Generates a specified amount of rock sprites 
+    @param: rocks: the group in which a rock will be added to
+    @param: amountOfRocks: the amount of rocks being generated
+    */
 
 function generateRocks(rocks, amountOfRocks) {
     if (gameEnded != true) {
@@ -242,7 +252,6 @@ function generateRocks(rocks, amountOfRocks) {
 
     /*
     Removes banana from the screen and adds 10 points to score.
-    Plays a happy monkey sfx
     @param: A monkey sprite
     @param: A banana sprite
     */
@@ -274,19 +283,24 @@ function hitByRock(monkey, rock) {
 
         crashDrop = true;
     }
-    
 }
 
-function initializeMonkey(monkey, bananatingX, bananatingY, game) {
+    /*
+    Initalizes the monkey sprite, giving it a starting position and sprite sheet
+    @param: monkey, the sprite being initialized
+    @param: startingX, the initial x position 
+    @param: startingY, the initial y position
+    @param: game, the game
+    */
+function initializeMonkey(monkey, startingX, startingY, game) {
     // The player and its settings
-    monkey = game.add.sprite(bananatingX, bananatingY, 'monkey', 4);
+    monkey = game.add.sprite(startingX, startingY, 'monkey', 4);
 
     game.physics.enable(monkey);
 
-    //  Player physics properties. Give the little guy a slight bounce.
-    monkey.body.bounce.y = 0;
-    monkey.body.gravity.y = gravity; //gravedad
-    monkey.body.collideWorldBounds = true; //choque con los bordes del juego
+    //  Player physics properties.
+    monkey.body.gravity.y = gravity; 
+    monkey.body.collideWorldBounds = true; 
 
     //  Our two animations, walking left and right.
     monkey.animations.add('left', [0, 1, 2, 3], 10, true);
@@ -324,7 +338,7 @@ function mouseDebugger() {
 }
 
 /*
-Adjusts camera location
+Debug function, adjusts camera location
 @param: int adjustment, which adjusts camera location
 */
 function adjustCameraLocation(adjustment) {
@@ -333,7 +347,7 @@ function adjustCameraLocation(adjustment) {
 }
 
 
-//Controls for camera movement
+//Debug function, controls for camera movement
 function cameraControls() {
     if (cursors.up.isDown) {
         adjustCameraLocation(CAMERA_ADJUSTMENT);
@@ -342,15 +356,21 @@ function cameraControls() {
     }
 }
 
-
+    /*
+    Kills sprite which collided with ground
+    @param: sprite being killed
+    @groun: none
+    */
 function removeSprite(sprite, ground) {
     sprite.kill();
 }
-
+    /*
+    Controls input for the monkey, allowing it to move left and right as well as perform a drop
+    */
 function controls() {
-    //mouseDebugger();
-    //  Reset the players velocity (movement)
+    //  Reset the x velocity
     monkeyJumping.body.velocity.x = 0;
+
     if (isJumping) {
         if (!crashDrop) {
             if (cursors.left.isDown) 
